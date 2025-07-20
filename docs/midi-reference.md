@@ -60,11 +60,13 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 - **Function**: Set tempo for master modes
 - **Active Modes**: LSDJ Master, Nanoloop Master only
 - **Formula**: BPM = 60 + (CC7 * 140/127)
+- **Auto-Save**: Settings saved to EEPROM immediately
 
 ### CC16 - General Purpose 1 (MIDI Channel)
 - **Range**: 0-127 (maps to MIDI channels 1-16)
 - **Function**: Set MIDI input channel for single-channel modes
 - **Active Modes**: LSDJ Keyboard, Nanoloop modes
+- **Auto-Save**: Settings saved to EEPROM immediately
 
 ### CC17-20 - General Purpose 2-5 (LSDJ Map Channels)
 | CC | Function | Range |
@@ -76,6 +78,7 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 
 **Active Mode**: LSDJ Map only
 **Default**: Channels 1, 2, 3, 4 respectively
+**Auto-Save**: Settings saved to EEPROM immediately
 
 ### CC21 - General Purpose 6 (Velocity Curve)
 - **Range**: 0-127
@@ -197,15 +200,27 @@ Multi-Channel Modes (Map):
 
 ### LSDJ Velocity Mapping
 ```
-MIDI Velocity (0-127) → LSDJ Velocity (0-15)
-Formula: lsdj_vel = midi_vel >> 3
+MIDI Velocity (0-127) → LSDJ Velocity (1-15)
+Formula: lsdj_vel = (midi_vel >> 3) + 1
+Special: velocity 0 = LSDJ velocity 0 (note off)
 ```
 
 ### Nanoloop Velocity
 ```
-MIDI Velocity → Sample trigger strength
+MIDI Velocity (0-127) → Nanoloop Velocity (0-31)
+Formula: nano_vel = midi_vel >> 2
 Higher velocity = louder sample playback
 ```
+
+## Persistent Settings
+
+DUYinoboy automatically saves the following settings to EEPROM:
+- Current mode (Program Change)
+- MIDI input channel (CC16)
+- BPM setting (CC7)
+- LSDJ Map channel assignments (CC17-20)
+
+Settings are restored on power-up.
 
 ## System Exclusive (SysEx)
 

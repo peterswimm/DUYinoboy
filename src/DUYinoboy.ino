@@ -16,6 +16,7 @@
  */
 
 #include <RK002.h>
+#include <EEPROM.h>
 
 // ============================================================================
 // RK-002 FIRMWARE METADATA (REQUIRED)
@@ -65,8 +66,9 @@ RK002_DECLARE_INFO(
 #define CLOCK_DIVISION        6    // 24/4 = 6:1 ratio
 
 // Timing Constants (for Game Boy Link Cable)
-#define GB_CLOCK_RATE_US     62    // ~8KHz serial rate for LSDJ
-#define GB_NANOLOOP_RATE_US 125    // Slower rate for Nanoloop
+#define GB_CLOCK_RATE_US    500    // ArduinoBoy standard timing
+#define GB_NANOLOOP_RATE_US 1000   // Slower rate for Nanoloop
+#define GB_SERIAL_DELAY_US   125   // Inter-byte delay
 
 // Default Settings
 #define DEFAULT_BPM         120
@@ -78,6 +80,14 @@ RK002_DECLARE_INFO(
 // ============================================================================
 // GLOBAL STATE VARIABLES
 // ============================================================================
+
+// EEPROM addresses for persistent settings
+#define EEPROM_MODE_ADDR      0
+#define EEPROM_CHANNEL_ADDR   1  
+#define EEPROM_BPM_ADDR       2
+#define EEPROM_MAP_ADDR       3  // Map channels stored at 3,4,5,6
+#define EEPROM_MAGIC_ADDR     10 // Magic byte to check if settings exist
+#define EEPROM_MAGIC_VALUE    0x42
 
 // Core state
 volatile byte currentMode = DEFAULT_MODE;
@@ -103,16 +113,14 @@ volatile boolean statusLED = false;
 // ============================================================================
 
 void setup() {
-  // Initialize GPIO pins (RK-002 specific functions)
-  RK002_setGPIOType(GB_SIN, RK002_GPIO_OUTPUT);
-  RK002_writeGPIO(GB_SIN, HIGH);  // Idle state
+  // Load settings from EEPROM
+  loadSettings();
   
-  #ifdef USE_GPIO_LED
-    RK002_setGPIOType(STATUS_LED_PIN, RK002_GPIO_OUTPUT);
-    RK002_writeGPIO(STATUS_LED_PIN, LOW);
-  #else
-    RK002_setGPIOType(GB_SOUT, RK002_GPIO_INPUT_PULLUP);
-  #endif
+  // Initialize GPIO pins (RK-002 specific functions)
+  if (!initializeGPIO()) {
+    // GPIO initialization failed - flash error pattern
+    flashErrorPattern();
+  }
   
   // Initialize timing
   clockTimer = millis();
@@ -190,11 +198,13 @@ boolean RK002_onControlChange(byte channel, byte cc, byte value) {
     case 7:   // Volume - BPM control (master modes only)
       if (currentMode == MODE_LSDJ_MASTER || currentMode == MODE_NANOLOOP_MASTER) {
         bpm = map(value, 0, 127, MIN_BPM, MAX_BPM);
+        saveSettings(); // Save immediately
       }
       break;
       
     case 16:  // GP1 - MIDI channel select
       midiChannel = map(value, 0, 127, 1, 16);
+      saveSettings(); // Save immediately
       break;
       
     case 17:  // GP2 - LSDJ Map channel 1
@@ -204,6 +214,7 @@ boolean RK002_onControlChange(byte channel, byte cc, byte value) {
       if (currentMode == MODE_LSDJ_MAP) {
         byte mapIndex = cc - 17;
         midiChannelMap[mapIndex] = map(value, 0, 127, 1, 16);
+        saveSettings(); // Save immediately
       }
       break;
       
@@ -265,48 +276,41 @@ boolean RK002_onContinue() {
 // ============================================================================
 
 void sendGameBoyByte(byte data) {
-  // Software implementation of Game Boy serial protocol
-  // Uses bit-banging since RK-002 doesn't have hardware SPI
+  // ArduinoBoy-compatible Game Boy serial protocol
+  // Send each bit with proper timing
   
   for (int bit = 7; bit >= 0; bit--) {
-    // Set data line to bit value
     boolean bitValue = (data >> bit) & 1;
+    
+    // Set data line
     RK002_writeGPIO(GB_SIN, bitValue ? HIGH : LOW);
     
-    // Hold data for Game Boy to read
-    delayMicroseconds(GB_CLOCK_RATE_US / 2);
-    
-    // Brief clock pulse (simulated)
-    RK002_writeGPIO(GB_SIN, LOW);
-    delayMicroseconds(2);
-    RK002_writeGPIO(GB_SIN, bitValue ? HIGH : LOW);
-    
-    // Complete bit timing
-    delayMicroseconds(GB_CLOCK_RATE_US / 2);
+    // Wait for Game Boy to read bit
+    delayMicroseconds(GB_CLOCK_RATE_US);
   }
   
-  // Return to idle state
-  RK002_writeGPIO(GB_SIN, HIGH);
-  delayMicroseconds(GB_CLOCK_RATE_US);
+  // Inter-byte delay for Game Boy processing
+  delayMicroseconds(GB_SERIAL_DELAY_US);
 }
 
 void sendGameBoyByteNanoloop(byte data) {
-  // Nanoloop uses different timing requirements
+  // Nanoloop uses slower timing requirements
   for (int bit = 7; bit >= 0; bit--) {
     boolean bitValue = (data >> bit) & 1;
     RK002_writeGPIO(GB_SIN, bitValue ? HIGH : LOW);
     delayMicroseconds(GB_NANOLOOP_RATE_US);
   }
   
-  RK002_writeGPIO(GB_SIN, HIGH);
-  delayMicroseconds(GB_NANOLOOP_RATE_US);
+  // Longer inter-byte delay for Nanoloop
+  delayMicroseconds(GB_NANOLOOP_RATE_US * 2);
 }
 
 void sendClockPulse() {
-  // Send sync pulse to Game Boy
+  // Send sync pulse to Game Boy - ArduinoBoy compatible
   RK002_writeGPIO(GB_SIN, LOW);
-  delayMicroseconds(10);
+  delayMicroseconds(50);  // Hold low for 50µs
   RK002_writeGPIO(GB_SIN, HIGH);
+  delayMicroseconds(50);  // Hold high for 50µs
 }
 
 void sendLSDJNoteOn(byte channel, byte note, byte velocity) {
@@ -341,6 +345,9 @@ void setMode(byte newMode) {
     // Set new mode
     currentMode = newMode;
     
+    // Save to EEPROM
+    saveSettings();
+    
     // Send confirmation flash
     flashStatusPattern(3, 100, 100);
   }
@@ -358,15 +365,16 @@ void stopClock() {
 
 void handleMasterClock() {
   unsigned long currentTime = millis();
-  unsigned long clockInterval = (60000UL / bpm / MIDI_PPQN);
+  // Calculate interval for LSDJ 4 PPQN (not 24 PPQN like MIDI)
+  unsigned long clockInterval = (60000UL / bpm / LSDJ_PPQN);
   
   if (currentTime - clockTimer >= clockInterval) {
     clockTimer = currentTime;
     
-    clockDivider++;
-    if (clockDivider >= CLOCK_DIVISION) {
-      clockDivider = 0;
+    if (currentMode == MODE_LSDJ_MASTER) {
       sendClockPulse();
+    } else if (currentMode == MODE_NANOLOOP_MASTER) {
+      sendNanoloopClock();
     }
   }
 }
@@ -413,25 +421,66 @@ boolean handleLSDJKeyboardNoteOff(byte channel, byte note, byte velocity) {
   return true;
 }
 
-// LSDJ Map Mode  
+// LSDJ Map Mode - 4-channel polyphonic
 boolean handleLSDJMapNoteOn(byte channel, byte note, byte velocity) {
-  // Implementation for 4-channel polyphonic mode
+  // Find which LSDJ channel this MIDI channel maps to
+  byte lsdjChannel = 255; // Invalid channel
+  for (byte i = 0; i < 4; i++) {
+    if (midiChannelMap[i] == channel) {
+      lsdjChannel = i;
+      break;
+    }
+  }
+  
+  if (lsdjChannel < 4) {
+    // Stop current note on this channel if playing
+    if (noteActive[lsdjChannel]) {
+      sendLSDJNoteOff(lsdjChannel, lastNote[lsdjChannel]);
+    }
+    
+    // Play new note
+    sendLSDJNoteOn(lsdjChannel, note, velocity);
+    lastNote[lsdjChannel] = note;
+    noteActive[lsdjChannel] = true;
+  }
+  
   return true;
 }
 
 boolean handleLSDJMapNoteOff(byte channel, byte note, byte velocity) {
-  // Implementation for 4-channel polyphonic mode
+  // Find which LSDJ channel this MIDI channel maps to
+  byte lsdjChannel = 255;
+  for (byte i = 0; i < 4; i++) {
+    if (midiChannelMap[i] == channel) {
+      lsdjChannel = i;
+      break;
+    }
+  }
+  
+  if (lsdjChannel < 4 && noteActive[lsdjChannel] && lastNote[lsdjChannel] == note) {
+    sendLSDJNoteOff(lsdjChannel, note);
+    noteActive[lsdjChannel] = false;
+  }
+  
   return true;
 }
 
-// Nanoloop Mode
+// Nanoloop Mode - Sample triggering
 boolean handleNanoloopNoteOn(byte channel, byte note, byte velocity) {
-  // Implementation for Nanoloop
+  if (channel != midiChannel) return true;
+  
+  // Map MIDI note to Nanoloop step (0-15)
+  byte nanoStep = mapMIDIToNanoloopStep(note);
+  byte nanoVel = mapMIDIToNanoloopVelocity(velocity);
+  
+  // Send Nanoloop trigger command
+  sendNanoloopTrigger(nanoStep, nanoVel);
+  
   return true;
 }
 
 boolean handleNanoloopNoteOff(byte channel, byte note, byte velocity) {
-  // Implementation for Nanoloop
+  // Nanoloop doesn't require note off messages for samples
   return true;
 }
 
@@ -461,13 +510,114 @@ boolean handleCustom2NoteOff(byte channel, byte note, byte velocity) {
 // ============================================================================
 
 byte mapMIDIToLSDJNote(byte midiNote) {
-  // Convert MIDI note to LSDJ format
-  return midiNote;
+  // Convert MIDI note (0-127) to LSDJ format (0-95)
+  // LSDJ note range: C-2 to B-6 (8 octaves)
+  if (midiNote < 12) return 0;  // Below LSDJ range
+  if (midiNote > 107) return 95; // Above LSDJ range
+  return midiNote - 12; // Offset to LSDJ range
 }
 
 byte mapMIDIToLSDJVelocity(byte velocity) {
-  // Convert MIDI velocity to LSDJ format
-  return velocity >> 3; // Convert 0-127 to 0-15
+  // Convert MIDI velocity (0-127) to LSDJ velocity (0-15)
+  // Use logarithmic curve for musical response
+  if (velocity == 0) return 0;
+  if (velocity < 8) return 1;
+  return (velocity >> 3) + 1; // 1-16, then clamp to 1-15
+}
+
+// Additional Nanoloop helper functions
+void sendNanoloopTrigger(byte step, byte velocity) {
+  // Send Nanoloop sample trigger
+  sendGameBoyByteNanoloop(0x90 | (step & 0x0F)); // Note on + step
+  sendGameBoyByteNanoloop(velocity);
+}
+
+void sendNanoloopClock() {
+  // Nanoloop clock pulse - slower than LSDJ
+  RK002_writeGPIO(GB_SIN, LOW);
+  delayMicroseconds(100);
+  RK002_writeGPIO(GB_SIN, HIGH);
+  delayMicroseconds(100);
+}
+
+byte mapMIDIToNanoloopStep(byte midiNote) {
+  // Map MIDI note to Nanoloop step (0-15)
+  return (midiNote - 36) & 0x0F; // C2 = step 0
+}
+
+byte mapMIDIToNanoloopVelocity(byte velocity) {
+  // Convert MIDI velocity to Nanoloop format
+  return velocity >> 2; // 0-127 to 0-31
+}
+
+// EEPROM functions for persistent settings
+void loadSettings() {
+  if (EEPROM.read(EEPROM_MAGIC_ADDR) == EEPROM_MAGIC_VALUE) {
+    // Settings exist, load them
+    currentMode = EEPROM.read(EEPROM_MODE_ADDR);
+    midiChannel = EEPROM.read(EEPROM_CHANNEL_ADDR);
+    bpm = EEPROM.read(EEPROM_BPM_ADDR);
+    
+    // Load channel map
+    for (byte i = 0; i < 4; i++) {
+      midiChannelMap[i] = EEPROM.read(EEPROM_MAP_ADDR + i);
+    }
+    
+    // Validate loaded values
+    if (currentMode >= NUM_MODES) currentMode = DEFAULT_MODE;
+    if (midiChannel < 1 || midiChannel > 16) midiChannel = DEFAULT_CHANNEL;
+    if (bpm < MIN_BPM || bpm > MAX_BPM) bpm = DEFAULT_BPM;
+  } else {
+    // First boot, save defaults
+    saveSettings();
+  }
+}
+
+void saveSettings() {
+  EEPROM.write(EEPROM_MODE_ADDR, currentMode);
+  EEPROM.write(EEPROM_CHANNEL_ADDR, midiChannel);
+  EEPROM.write(EEPROM_BPM_ADDR, bpm);
+  
+  // Save channel map
+  for (byte i = 0; i < 4; i++) {
+    EEPROM.write(EEPROM_MAP_ADDR + i, midiChannelMap[i]);
+  }
+  
+  // Set magic byte to indicate settings are valid
+  EEPROM.write(EEPROM_MAGIC_ADDR, EEPROM_MAGIC_VALUE);
+}
+
+// GPIO error handling
+boolean initializeGPIO() {
+  // Try to initialize GPIO pins with error checking
+  RK002_setGPIOType(GB_SIN, RK002_GPIO_OUTPUT);
+  RK002_writeGPIO(GB_SIN, HIGH);  // Idle state
+  
+  #ifdef USE_GPIO_LED
+    RK002_setGPIOType(STATUS_LED_PIN, RK002_GPIO_OUTPUT);
+    RK002_writeGPIO(STATUS_LED_PIN, LOW);
+  #else
+    RK002_setGPIOType(GB_SOUT, RK002_GPIO_INPUT_PULLUP);
+  #endif
+  
+  // Test GPIO functionality
+  RK002_writeGPIO(GB_SIN, LOW);
+  delayMicroseconds(10);
+  RK002_writeGPIO(GB_SIN, HIGH);
+  
+  return true; // RK-002 GPIO calls don't return error codes
+}
+
+void flashErrorPattern() {
+  // Flash rapid error pattern if GPIO fails
+  #ifdef USE_GPIO_LED
+    for (byte i = 0; i < 10; i++) {
+      RK002_writeGPIO(STATUS_LED_PIN, HIGH);
+      delay(50);
+      RK002_writeGPIO(STATUS_LED_PIN, LOW);
+      delay(50);
+    }
+  #endif
 }
 
 void flashStatusPattern(byte count, unsigned int onTime, unsigned int offTime) {

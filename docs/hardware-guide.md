@@ -33,7 +33,7 @@ Pin 1: VCC (+5V) - Not used
 Pin 2: SOUT (Serial Out) - Red wire
 Pin 3: SIN (Serial In) - Orange wire  
 Pin 4: P14 - Not used
-Pin 5: SCK (Serial Clock) - Green wire (not used)
+Pin 5: SCK (Serial Clock) - Green wire (used in some modes)
 Pin 6: GND (Ground) - Blue wire
 ```
 
@@ -47,10 +47,12 @@ Game Boy Pin 6 (GND) → RK-002 Ground
 
 ### Full Setup (3 wires)
 ```
-Game Boy Pin 2 (SOUT) → RK-002 GPIO 2 (optional)
-Game Boy Pin 3 (SIN) → RK-002 GPIO 1 (required)
+Game Boy Pin 2 (SOUT) → RK-002 GPIO 2 (optional - for bidirectional)
+Game Boy Pin 3 (SIN) → RK-002 GPIO 1 (required - data to Game Boy)
 Game Boy Pin 6 (GND) → RK-002 Ground (required)
 ```
+
+**Note**: Pin 5 (SCK) may be needed for advanced modes but RK-002 has only 2 GPIO pins.
 
 ## Cable Modification Steps
 
@@ -151,9 +153,11 @@ Rely on Game Boy software feedback only.
 ## Safety Notes
 
 - Game Boy operates at 5V (safe voltage)
-- RK-002 GPIO pins are 3.3V tolerant
+- RK-002 GPIO pins are 3.3V and 5V tolerant
+- Direct connection is safe without level shifting
 - Use proper grounding to prevent static damage
 - Work in well-ventilated area when soldering
+- Test connections with multimeter before powering
 
 ## Compatible Game Boy Models
 
