@@ -1,5 +1,18 @@
 # DUYinoboy
 
+> 🤖 **⚠️ AI-GENERATED PROJECT WARNING ⚠️** 
+> 
+> **This entire codebase was created through AI conversation and prompts.**
+> 
+> - ❌ **NOT TESTED** on real RK-002 hardware
+> - ❌ **NOT VERIFIED** by hardware experts  
+> - ❌ **MAY CONTAIN BUGS** or hardware incompatibilities
+> - ⚠️  **USE AT YOUR OWN RISK** - especially with vintage Game Boy hardware
+> 
+> **📋 Read the full [DISCLAIMER.md](DISCLAIMER.md) before proceeding!**
+> 
+> **For production use**: Upload via [DUY Web Editor](https://duy.retrokits.com/) and test thoroughly!
+
 **ArduinoBoy for Retrokits RK-002 Smart MIDI Cable**
 
 DUYinoboy is a complete port of the classic ArduinoBoy project for the Retrokits RK-002 Smart MIDI Cable. Transform your Game Boy into a powerful MIDI-controlled instrument using just a smart MIDI cable and a modified Game Boy Link Cable.
