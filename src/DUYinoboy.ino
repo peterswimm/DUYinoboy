@@ -38,7 +38,14 @@ RK002_DECLARE_INFO(
 #define GB_SOUT               2    // GPIO 2 ← Game Boy SOUT (Pin 2) OPTIONAL
 
 // Uncomment for GPIO LED instead of Game Boy bidirectional communication
-// #define USE_GPIO_LED              
+// #define SIMPLE_LED_MODE
+
+// ============================================================================
+// COMPATIBILITY CONSTANTS (for legacy ArduinoBoy code compatibility)
+// ============================================================================
+
+#define MODE_LSDJ_MASTER      0   // Legacy constant (not used in mGB modes)
+#define MODE_NANOLOOP_MASTER  1   // Legacy constant (not used in mGB modes)              
 #ifdef USE_GPIO_LED
   #define STATUS_LED_PIN      2    // GPIO 2 used for LED instead of Game Boy SOUT
 #endif
@@ -921,10 +928,10 @@ void sendMGBNoteOn(byte channel, byte note, byte velocity) {
   // Send mGB command sequence
   byte cmdByte = MGB_CMD_NOTE | channel;
   
-  gameBoySendByte(cmdByte);     // Command + channel
-  gameBoySendByte(gbNote);      // Note value
-  gameBoySendByte(gbVelocity);  // Velocity
-  gameBoySendByte(0x00);        // Length (not used in mGB)
+  sendGameBoyByte(cmdByte);     // Command + channel
+  sendGameBoyByte(gbNote);      // Note value
+  sendGameBoyByte(gbVelocity);  // Velocity
+  sendGameBoyByte(0x00);        // Length (not used in mGB)
 }
 
 void sendMGBNoteOff(byte channel, byte note) {
@@ -932,10 +939,10 @@ void sendMGBNoteOff(byte channel, byte note) {
   
   byte cmdByte = MGB_CMD_NOTE | channel;
   
-  gameBoySendByte(cmdByte);     
-  gameBoySendByte(0x00);        // Note 0 = note off
-  gameBoySendByte(0x00);        // Zero velocity
-  gameBoySendByte(0x00);        
+  sendGameBoyByte(cmdByte);     
+  sendGameBoyByte(0x00);        // Note 0 = note off
+  sendGameBoyByte(0x00);        // Zero velocity
+  sendGameBoyByte(0x00);        
 }
 
 // Musical scale quantization

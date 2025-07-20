@@ -46,6 +46,18 @@ DUYinoboy brings ArduinoBoy functionality to the ultra-compact RK-002 platform, 
    - Select mode with MIDI Program Change 0-7
    - Settings auto-save to EEPROM
 
+### Development Environment (This Repository)
+
+This repository includes minimal RK-002 and EEPROM libraries in the `libraries/` folder for VS Code IntelliSense and compilation testing:
+
+- **RK002.h/.cpp**: Stub implementations for Arduino compatibility
+- **EEPROM.h/.cpp**: Minimal EEPROM library for syntax checking
+- **.vscode/c_cpp_properties.json**: VS Code configuration for Arduino projects
+
+**⚠️ Important**: These are development stubs only! For actual hardware deployment:
+- Use the [DUY Web Editor](https://duy.retrokits.com/) (recommended)
+- Or install the [official RK-002 board package](https://retrokits.com/rk002-duy/) for Arduino IDE
+
 ## 📋 Supported Modes
 
 **Note**: DUYinoboy supports MIDI input only - all modes operate as MIDI clock followers
