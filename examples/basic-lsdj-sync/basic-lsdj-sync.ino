@@ -1,22 +1,21 @@
 /*
- * Basic LSDJ Sync Example
+ * Basic LSDJ Clock Sync Example
  * 
- * Simple master/slave sync for LSDJ
- * Demonstrates basic Game Boy communication
+ * LSDJ MIDI clock follower for RK-002
+ * Demonstrates basic Game Boy communication (slave sync only)
  */
 
 #include <RK002.h>
 
 RK002_DECLARE_INFO(
-  "LSDJ Basic Sync",
+  "LSDJ Clock Sync",
   "duyinoboy@github.com", 
   "1.0",
   "lsdj-sync-basic-2025-example-uuid"
 );
 
-// Mode definitions - using official ArduinoBoy terminology
-#define MODE_MASTER 0  // LSDJ as MIDI Master Sync
-#define MODE_SLAVE  1  // LSDJ as MIDI Slave Sync
+// RK-002 is MIDI input only - LSDJ follows external clock
+#define MODE_LSDJ_SYNC 0  // LSDJ MIDI Clock Sync (slave mode only)
 
 // GPIO pins
 #define GB_SIN      1
@@ -26,7 +25,7 @@ RK002_DECLARE_INFO(
 #define CLOCK_DIVISION 6  // 24 PPQN to 4 PPQN
 
 // State variables
-byte currentMode = MODE_MASTER;
+byte currentMode = MODE_LSDJ_SYNC;
 boolean clockRunning = false;
 byte clockCounter = 0;
 unsigned long lastClockTime = 0;

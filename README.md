@@ -2,17 +2,19 @@
 
 **ArduinoBoy for Retrokits RK-002 Smart MIDI Cable**
 
-DUYinoboy is a complete port of the classic ArduinoBoy project for the Retrokits RK-002 Smart MIDI Cable. Transform your Game Boy into a powerful MIDI instrument using just a smart MIDI cable and a modified Game Boy Link Cable.
+DUYinoboy is a complete port of the classic ArduinoBoy project for the Retrokits RK-002 Smart MIDI Cable. Transform your Game Boy into a powerful MIDI-controlled instrument using just a smart MIDI cable and a modified Game Boy Link Cable.
 
 ## 🎮 What is DUYinoboy?
 
-DUYinoboy brings all the functionality of ArduinoBoy to the ultra-compact RK-002 platform:
+DUYinoboy brings ArduinoBoy functionality to the ultra-compact RK-002 platform, optimized for MIDI input only:
 
-- **LSDJ Master/Slave Sync** - Sync Little Sound DJ with your DAW
+- **LSDJ MIDI Clock Sync** - Sync Little Sound DJ as MIDI clock follower
 - **LSDJ Keyboard Mode** - Play Game Boy like a synthesizer  
 - **LSDJ Map Mode** - 4-channel polyphonic control
-- **Nanoloop Support** - Master and slave sync for Nanoloop
+- **Nanoloop Clock Sync** - Sync Nanoloop as MIDI clock follower
 - **Custom Modes** - Extensible for your own Game Boy music applications
+
+**Note**: RK-002 is MIDI input only - your DAW/sequencer provides the master clock
 
 ## 🚀 Quick Start
 
@@ -46,15 +48,15 @@ DUYinoboy brings all the functionality of ArduinoBoy to the ultra-compact RK-002
 
 ## 📋 Supported Modes
 
+**Note**: DUYinoboy is optimized for MIDI input only - LSDJ runs as MIDI clock follower
+
 | Mode | Function | Game Boy Software |
 |------|----------|-------------------|
-| 0 | LSDJ Master Sync | LSDJ (any version) |
-| 1 | LSDJ Slave Sync | LSDJ (any version) |
-| 2 | LSDJ Keyboard Mode | LSDJ Keyboard mode |
-| 3 | LSDJ Map Mode | LSDJ (channels 1-4) |
-| 4 | Nanoloop Master Sync | Nanoloop 1.x |
-| 5 | Nanoloop Slave Sync | Nanoloop 1.x |
-| 6-7 | Custom Modes | User-definable |
+| 0 | LSDJ MIDI Clock Sync | LSDJ (slave sync mode) |
+| 1 | LSDJ Keyboard Mode | LSDJ Keyboard mode |
+| 2 | LSDJ Map Mode | LSDJ (channels 1-4) |
+| 3 | Nanoloop MIDI Clock Sync | Nanoloop 1.x (slave sync) |
+| 4-7 | Custom Modes | User-definable |
 
 ## 🔧 Hardware Requirements
 
@@ -67,8 +69,8 @@ DUYinoboy brings all the functionality of ArduinoBoy to the ultra-compact RK-002
 - **Cable Length**: ~1.5 meters
 - **Expansion**: Compatible with [RK-202 Buttonboard](https://retrokits.com/shop/rk202/) for additional controls
 
-### Clock Generation vs MIDI Output
-DUYinoboy's "Master" modes create timing signals via GPIO pins to synchronize the Game Boy, **not MIDI output**. The RK-002 hardware only supports MIDI input - all Game Boy communication happens through the 2 available GPIO pins.
+### MIDI Clock Follower Design
+DUYinoboy is designed as a **MIDI clock follower only** - your DAW/sequencer provides the master clock. The RK-002 hardware only supports MIDI input, so all timing signals are converted from incoming MIDI clock to Game Boy GPIO signals. No master clock generation capability.
 
 ### Game Boy Link Cable Connections
 - **Pin 2 (SOUT)**: Red wire → RK-002 GPIO 2 (optional)

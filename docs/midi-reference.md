@@ -10,31 +10,33 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 
 ## Mode Selection
 
+**Note**: DUYinoboy is MIDI input only - all modes follow external MIDI clock
+
 ### Primary Method: Program Change
 | Program | Mode | Function | Game Boy Software |
 |---------|------|----------|-------------------|
-| 0 | LSDJ Master Sync | Generate clock for LSDJ | LSDJ (any version) |
-| 1 | LSDJ Slave Sync | Sync to external clock | LSDJ (any version) |
-| 2 | LSDJ Keyboard Mode | Real-time note input | LSDJ Keyboard mode |
-| 3 | LSDJ Map Mode | 4-channel polyphonic | LSDJ (channels 1-4) |
-| 4 | Nanoloop Master Sync | Generate clock for Nanoloop | Nanoloop 1.x |
-| 5 | Nanoloop Slave Sync | Sync to external clock | Nanoloop 1.x |
-| 6 | Custom Mode 1 | User-definable | Custom software |
-| 7 | Custom Mode 2 | User-definable | Custom software |
+| 0 | LSDJ MIDI Clock Sync | Follow external MIDI clock | LSDJ (slave sync mode) |
+| 1 | LSDJ Keyboard Mode | Real-time note input | LSDJ Keyboard mode |
+| 2 | LSDJ Map Mode | 4-channel polyphonic | LSDJ (channels 1-4) |
+| 3 | Nanoloop MIDI Clock Sync | Follow external MIDI clock | Nanoloop 1.x (slave sync) |
+| 4 | Custom Mode 1 | User-definable | Custom software |
+| 5 | Custom Mode 2 | User-definable | Custom software |
+| 6 | Custom Mode 3 | User-definable | Custom software |
+| 7 | Custom Mode 4 | User-definable | Custom software |
 
-**Example**: Send Program Change 2 to select LSDJ Keyboard mode.
+**Example**: Send Program Change 1 to select LSDJ Keyboard mode.
 
 ### Alternative: Mod Wheel (CC1)
 | CC1 Value | Mode Selected |
 |-----------|---------------|
-| 0-15 | Mode 0 (LSDJ Master) |
-| 16-31 | Mode 1 (LSDJ Slave) |
-| 32-47 | Mode 2 (LSDJ Keyboard) |
-| 48-63 | Mode 3 (LSDJ Map) |
-| 64-79 | Mode 4 (Nanoloop Master) |
-| 80-95 | Mode 5 (Nanoloop Slave) |
-| 96-111 | Mode 6 (Custom 1) |
-| 112-127 | Mode 7 (Custom 2) |
+| 0-15 | Mode 0 (LSDJ Clock Sync) |
+| 16-31 | Mode 1 (LSDJ Keyboard) |
+| 32-47 | Mode 2 (LSDJ Map) |
+| 48-63 | Mode 3 (Nanoloop Clock Sync) |
+| 64-79 | Mode 4 (Custom 1) |
+| 80-95 | Mode 5 (Custom 2) |
+| 96-111 | Mode 6 (Custom 3) |
+| 112-127 | Mode 7 (Custom 4) |
 
 ## Note Messages
 
@@ -45,7 +47,7 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 |------|---------------|
 | LSDJ Keyboard | Single channel, real-time play |
 | LSDJ Map | Polyphonic across 4 channels |
-| Nanoloop | Trigger samples/steps |
+| Nanoloop Clock Sync | Trigger samples/steps |
 | Custom | User-defined behavior |
 
 **MIDI Format**:
@@ -61,17 +63,15 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 - **Function**: Select mode (see table above)
 - **Usage**: Alternative to Program Change
 
-### CC7 - Volume (BPM Control)
-- **Range**: 0-127 (maps to 60-200 BPM)
-- **Function**: Set tempo for master modes
-- **Active Modes**: LSDJ Master Sync, Nanoloop Master Sync only
-- **Formula**: BPM = 60 + (CC7 * 140/127)
-- **Auto-Save**: Settings saved to EEPROM immediately
+### CC7 - Volume (Reserved - Not Used)
+- **Range**: 0-127
+- **Function**: Reserved (RK-002 follows external MIDI clock only)
+- **Note**: BPM controlled by external DAW/sequencer sending MIDI clock
 
 ### CC16 - General Purpose 1 (MIDI Channel)
 - **Range**: 0-127 (maps to MIDI channels 1-16)
 - **Function**: Set MIDI input channel for single-channel modes
-- **Active Modes**: LSDJ Keyboard, Nanoloop modes
+- **Active Modes**: LSDJ Keyboard, Nanoloop Clock Sync mode
 - **Auto-Save**: Settings saved to EEPROM immediately
 
 ### CC17-20 - General Purpose 2-5 (LSDJ Map Channels)
@@ -107,8 +107,8 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 
 ### MIDI Clock (F8)
 - **Standard**: [MIDI Beat Clock](https://en.wikipedia.org/wiki/MIDI_beat_clock) - 24 PPQN
-- **Function**: Slave sync input for external synchronization
-- **Active Modes**: LSDJ Slave Sync, Nanoloop Slave Sync
+- **Function**: Clock sync input for external synchronization
+- **Active Modes**: LSDJ MIDI Clock Sync, Nanoloop MIDI Clock Sync
 - **Conversion**: 24 PPQN MIDI → 4 PPQN Game Boy (6:1 division ratio)
 - **Timing**: 60,000,000 / (24 × BPM) microseconds between clocks
 
@@ -116,7 +116,7 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 
 #### Start (FA)
 - **Function**: Start sequencer from beginning
-- **Active Modes**: Slave modes
+- **Active Modes**: Clock sync modes
 
 #### Stop (FC)  
 - **Function**: Stop sequencer
@@ -124,30 +124,22 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 
 #### Continue (FB)
 - **Function**: Resume from current position
-- **Active Modes**: Slave modes
+- **Active Modes**: Clock sync modes
 
 ## Mode-Specific MIDI Implementation
 
-### LSDJ Master Sync Mode (0)
-**MIDI Input**:
-- CC7: Set BPM (60-200)
-- CC64: Start/Stop transport
-
-**Behavior**:
-- Generates 4 PPQN clock for LSDJ
-- BPM controllable via CC7
-- Start/stop via CC64
-
-### LSDJ Slave Sync Mode (1)  
+### LSDJ MIDI Clock Sync Mode (0)
 **MIDI Input**:
 - MIDI Clock: Follow external clock
 - Start/Stop/Continue: Transport control
+- CC64: Start/Stop transport
 
 **Behavior**:
 - Follows incoming MIDI clock
 - Converts 24 PPQN to 4 PPQN for LSDJ
+- No internal clock generation
 
-### LSDJ Keyboard Mode (2)
+### LSDJ Keyboard Mode (1)
 **MIDI Input**:
 - Note On/Off: Real-time note play
 - CC16: MIDI channel select (1-16)
@@ -157,7 +149,7 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 - Direct MIDI-to-LSDJ note conversion
 - Velocity affects LSDJ instrument parameters
 
-### LSDJ Map Mode (3)
+### LSDJ Map Mode (2)
 **MIDI Input**:
 - Note On/Off: 4-channel polyphonic
 - CC17-20: Channel MIDI mapping
@@ -167,25 +159,16 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 - Up to 4-note polyphony
 - Independent channel control
 
-### Nanoloop Master Sync Mode (4)
+### Nanoloop MIDI Clock Sync Mode (3)
 **MIDI Input**:
+- MIDI Clock: Follow external clock
 - Note On: Trigger samples
-- CC7: Set BPM
-- CC64: Start/Stop
+- Start/Stop/Continue: Transport control
 
 **Behavior**:
-- Generates clock for Nanoloop
+- Follows incoming MIDI clock
 - Notes trigger sample steps
-
-### Nanoloop Slave Sync Mode (5)
-**MIDI Input**:
-- MIDI Clock: Sync input
-- Note On: Trigger samples
-- Transport: Start/Stop/Continue
-
-**Behavior**:
-- Sync to external MIDI clock
-- Note mapping to Nanoloop steps
+- No internal clock generation
 
 ## MIDI Channel Usage
 

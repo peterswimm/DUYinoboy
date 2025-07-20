@@ -44,17 +44,18 @@ RK002_DECLARE_INFO(
 #endif
 
 // ============================================================================
-// ARDUINOBOY MODE DEFINITIONS
+// ARDUINOBOY MODE DEFINITIONS - RK-002 OPTIMIZED
 // ============================================================================
+// Note: RK-002 is MIDI input only - supports LSDJ as MIDI clock follower only
 
-#define MODE_LSDJ_MASTER      0  // LSDJ as MIDI Master Sync
-#define MODE_LSDJ_SLAVE       1  // LSDJ as MIDI Slave Sync  
-#define MODE_LSDJ_KEYBOARD    2  // LSDJ PC Keyboard mode
-#define MODE_LSDJ_MAP         3  // LSDJ MIDIMAP mode (4-channel polyphonic)
-#define MODE_NANOLOOP_MASTER  4  // MIDI to Nanoloop sync (master)
-#define MODE_NANOLOOP_SLAVE   5  // MIDI to Nanoloop sync (slave)
-#define MODE_CUSTOM_1         6  // Custom mode 1
-#define MODE_CUSTOM_2         7  // Custom mode 2
+#define MODE_LSDJ_SYNC        0  // LSDJ MIDI Clock Sync (slave mode only)
+#define MODE_LSDJ_KEYBOARD    1  // LSDJ PC Keyboard mode
+#define MODE_LSDJ_MAP         2  // LSDJ MIDIMAP mode (4-channel polyphonic)
+#define MODE_NANOLOOP_SYNC    3  // Nanoloop MIDI Clock Sync (slave mode only)
+#define MODE_CUSTOM_1         4  // Custom mode 1
+#define MODE_CUSTOM_2         5  // Custom mode 2
+#define MODE_CUSTOM_3         6  // Custom mode 3
+#define MODE_CUSTOM_4         7  // Custom mode 4
 #define NUM_MODES             8
 
 // ============================================================================
@@ -72,7 +73,7 @@ RK002_DECLARE_INFO(
 
 // Default Settings
 #define DEFAULT_BPM         120
-#define DEFAULT_MODE        MODE_LSDJ_MASTER
+#define DEFAULT_MODE        MODE_LSDJ_SYNC
 #define DEFAULT_CHANNEL       1
 #define MIN_BPM              60
 #define MAX_BPM             200
@@ -131,10 +132,8 @@ void setup() {
 }
 
 void loop() {
-  // Process clock generation for master modes
-  if ((currentMode == MODE_LSDJ_MASTER || currentMode == MODE_NANOLOOP_MASTER) && clockRunning) {
-    handleMasterClock();
-  }
+  // RK-002 is MIDI input only - no master clock generation
+  // All timing follows external MIDI clock signals
   
   // Update status indicators
   handleStatusUpdate();
@@ -155,8 +154,7 @@ boolean RK002_onNoteOn(byte channel, byte note, byte velocity) {
     case MODE_LSDJ_MAP:
       return handleLSDJMapNoteOn(channel, note, velocity);
       
-    case MODE_NANOLOOP_MASTER:
-    case MODE_NANOLOOP_SLAVE:
+    case MODE_NANOLOOP_SYNC:
       return handleNanoloopNoteOn(channel, note, velocity);
       
     case MODE_CUSTOM_1:
@@ -164,6 +162,12 @@ boolean RK002_onNoteOn(byte channel, byte note, byte velocity) {
       
     case MODE_CUSTOM_2:
       return handleCustom2NoteOn(channel, note, velocity);
+      
+    case MODE_CUSTOM_3:
+      return handleCustom3NoteOn(channel, note, velocity);
+      
+    case MODE_CUSTOM_4:
+      return handleCustom4NoteOn(channel, note, velocity);
   }
   return true; // Pass through MIDI
 }
@@ -176,8 +180,7 @@ boolean RK002_onNoteOff(byte channel, byte note, byte velocity) {
     case MODE_LSDJ_MAP:
       return handleLSDJMapNoteOff(channel, note, velocity);
       
-    case MODE_NANOLOOP_MASTER:
-    case MODE_NANOLOOP_SLAVE:
+    case MODE_NANOLOOP_SYNC:
       return handleNanoloopNoteOff(channel, note, velocity);
       
     case MODE_CUSTOM_1:
@@ -185,6 +188,12 @@ boolean RK002_onNoteOff(byte channel, byte note, byte velocity) {
       
     case MODE_CUSTOM_2:
       return handleCustom2NoteOff(channel, note, velocity);
+      
+    case MODE_CUSTOM_3:
+      return handleCustom3NoteOff(channel, note, velocity);
+      
+    case MODE_CUSTOM_4:
+      return handleCustom4NoteOff(channel, note, velocity);
   }
   return true;
 }
@@ -195,11 +204,8 @@ boolean RK002_onControlChange(byte channel, byte cc, byte value) {
       setMode(value >> 4);  // Convert 0-127 to 0-7
       break;
       
-    case 7:   // Volume - BPM control (master modes only)
-      if (currentMode == MODE_LSDJ_MASTER || currentMode == MODE_NANOLOOP_MASTER) {
-        bpm = map(value, 0, 127, MIN_BPM, MAX_BPM);
-        saveSettings(); // Save immediately
-      }
+    case 7:   // Volume - BPM control (not used - RK-002 follows external clock only)
+      // RK-002 is MIDI input only - BPM controlled by external sequencer
       break;
       
     case 16:  // GP1 - MIDI channel select
@@ -238,7 +244,7 @@ boolean RK002_onProgramChange(byte channel, byte program) {
 }
 
 boolean RK002_onClock() {
-  if (currentMode == MODE_LSDJ_SLAVE || currentMode == MODE_NANOLOOP_SLAVE) {
+  if (currentMode == MODE_LSDJ_SYNC || currentMode == MODE_NANOLOOP_SYNC) {
     clockDivider++;
     if (clockDivider >= CLOCK_DIVISION) {
       clockDivider = 0;
@@ -251,21 +257,21 @@ boolean RK002_onClock() {
 }
 
 boolean RK002_onStart() {
-  if (currentMode == MODE_LSDJ_SLAVE || currentMode == MODE_NANOLOOP_SLAVE) {
+  if (currentMode == MODE_LSDJ_SYNC || currentMode == MODE_NANOLOOP_SYNC) {
     startClock();
   }
   return true;
 }
 
 boolean RK002_onStop() {
-  if (currentMode == MODE_LSDJ_SLAVE || currentMode == MODE_NANOLOOP_SLAVE) {
+  if (currentMode == MODE_LSDJ_SYNC || currentMode == MODE_NANOLOOP_SYNC) {
     stopClock();
   }
   return true;
 }
 
 boolean RK002_onContinue() {
-  if (currentMode == MODE_LSDJ_SLAVE || currentMode == MODE_NANOLOOP_SLAVE) {
+  if (currentMode == MODE_LSDJ_SYNC || currentMode == MODE_NANOLOOP_SYNC) {
     clockRunning = true;
   }
   return true;
@@ -501,6 +507,26 @@ boolean handleCustom2NoteOn(byte channel, byte note, byte velocity) {
 }
 
 boolean handleCustom2NoteOff(byte channel, byte note, byte velocity) {
+  // Your custom mode implementation
+  return true;
+}
+
+boolean handleCustom3NoteOn(byte channel, byte note, byte velocity) {
+  // Your custom mode implementation
+  return true;
+}
+
+boolean handleCustom3NoteOff(byte channel, byte note, byte velocity) {
+  // Your custom mode implementation
+  return true;
+}
+
+boolean handleCustom4NoteOn(byte channel, byte note, byte velocity) {
+  // Your custom mode implementation
+  return true;
+}
+
+boolean handleCustom4NoteOff(byte channel, byte note, byte velocity) {
   // Your custom mode implementation
   return true;
 }
