@@ -1,5 +1,21 @@
 # DUYinoboy Project Analysis: AI vs Human Development
 
+> **📝 Editor's Note - Peter Swimm**
+> 
+> **Take these numbers with a massive grain of salt.** While the AI development cost ($1.43) is accurate based on actual API usage, the economic valuations are highly speculative and potentially inflated:
+> 
+> - **LSDJ Value ($2M-5M)**: Comparing a niche Game Boy tracker to commercial DAWs is questionable. LSDJ's actual commercial value is likely much lower - maybe $50k-200k in real terms.
+> 
+> - **Foundation Work Estimates**: The 25+ years of development across multiple projects doesn't translate linearly to commercial value. Much of this was hobby/passion work, not billable hours.
+> 
+> - **Seattle Developer Rates**: $200+/hour assumes top-tier specialists. Real Arduino/embedded freelancers might charge $50-100/hour for this type of work.
+> 
+> - **ROI Calculations**: The 518,881x ROI is mathematically correct but practically meaningless - it's based on comparing AI costs to inflated foundation valuations.
+> 
+> **Reality Check**: This analysis demonstrates AI's impressive capability to synthesize existing knowledge, but the economic framing is more marketing than rigorous analysis. The real value is in rapid prototyping and learning, not replacing entire development ecosystems.
+> 
+> *- Peter Swimm, Project Lead*
+
 ## 💰 AI API Usage Cost Estimate
 
 ### Conversation Breakdown
