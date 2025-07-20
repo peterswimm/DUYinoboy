@@ -1,6 +1,5 @@
 # DUYinoboy Project Analysis: AI vs Human Development
 
-> **📝 Editor's Note - Peter Swimm**
 > 
 > **Take these numbers with a massive grain of salt.** While the AI development cost ($1.43) is accurate based on actual API usage, the economic valuations are highly speculative and potentially inflated:
 > 
