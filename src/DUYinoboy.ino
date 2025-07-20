@@ -49,14 +49,15 @@ RK002_DECLARE_INFO(
 // Note: RK-002 is MIDI input only - supports LSDJ as MIDI clock follower only
 
 #define MODE_LSDJ_SYNC        0  // LSDJ MIDI Clock Sync (slave mode only)
-#define MODE_LSDJ_KEYBOARD    1  // LSDJ PC Keyboard mode
-#define MODE_LSDJ_MAP         2  // LSDJ MIDIMAP mode (4-channel polyphonic)
-#define MODE_NANOLOOP_SYNC    3  // Nanoloop MIDI Clock Sync (slave mode only)
-#define MODE_CUSTOM_1         4  // Custom mode 1
-#define MODE_CUSTOM_2         5  // Custom mode 2
-#define MODE_CUSTOM_3         6  // Custom mode 3
-#define MODE_CUSTOM_4         7  // Custom mode 4
-#define NUM_MODES             8
+#define MODE_MGB_BASIC        1  // mGB Basic Mode - direct note control
+#define MODE_MGB_CHORD        2  // mGB Chord Mode - chord triggering
+#define MODE_MGB_ARPEGGIO     3  // mGB Arpeggiator Mode
+#define MODE_MGB_SCALES       4  // mGB with Musical Scales
+#define MODE_MGB_GRIDS        5  // mGB with Grids Adapter (4 pulse channels)
+#define MODE_LSDJ_KEYBOARD    6  // LSDJ PC Keyboard mode
+#define MODE_LSDJ_MAP         7  // LSDJ MIDIMAP mode (4-channel polyphonic)
+#define MODE_NANOLOOP_SYNC    8  // Nanoloop MIDI Clock Sync (slave mode only)
+#define NUM_MODES             9
 
 // ============================================================================
 // TIMING AND MIDI CONFIGURATION
@@ -77,6 +78,36 @@ RK002_DECLARE_INFO(
 #define DEFAULT_CHANNEL       1
 #define MIN_BPM              60
 #define MAX_BPM             200
+
+// ============================================================================
+// mGB MODE CONFIGURATION
+// ============================================================================
+
+// mGB uses 4 Game Boy sound channels (pulse1, pulse2, wave, noise)
+#define MGB_CHANNELS          4
+#define MGB_PULSE1            0    // Square wave with sweep
+#define MGB_PULSE2            1    // Square wave
+#define MGB_WAVE              2    // Wavetable channel  
+#define MGB_NOISE             3    // Noise channel
+
+// mGB Protocol - Game Boy specific commands
+#define MGB_CMD_NOTE          0x80 // Note command + channel (0x80-0x83)
+#define MGB_CMD_CC            0x90 // Control Change + channel (0x90-0x93)  
+#define MGB_CMD_PC            0xA0 // Program Change + channel (0xA0-0xA3)
+
+// Arpeggiator settings
+#define ARP_MAX_NOTES         8    // Maximum notes in arpeggio
+#define ARP_MAX_SPEED         16   // Arpeggio speed divisions
+#define ARP_PATTERNS          4    // Up, Down, Up/Down, Random
+
+// Scale definitions (based on musical scales)
+#define MAX_SCALES            8
+#define SCALE_LENGTH          12   // Chromatic scale length
+
+// Grids settings (inspired by Mutable Instruments Grids)
+#define GRIDS_PATTERNS        32   // Number of built-in patterns  
+#define GRIDS_STEPS           16   // Steps per pattern
+#define GRIDS_TRACKS          4    // One track per Game Boy channel
 
 // ============================================================================
 // GLOBAL STATE VARIABLES
@@ -108,6 +139,63 @@ volatile boolean noteActive[4] = {false, false, false, false};
 
 // Status indicators
 volatile boolean statusLED = false;
+
+// ============================================================================
+// mGB MODE STATE VARIABLES
+// ============================================================================
+
+// mGB Basic Mode
+volatile byte mgbChannelMap[4] = {1, 2, 3, 4};  // MIDI channels for each GB channel
+volatile byte mgbLastNote[4] = {0, 0, 0, 0};    // Last note played per channel
+volatile boolean mgbNoteOn[4] = {false, false, false, false};
+
+// mGB Chord Mode
+volatile byte chordRoot = 60;                    // Middle C
+volatile byte chordType = 0;                     // Major, Minor, etc.
+const byte chordPatterns[8][4] = {               // Chord types (intervals)
+  {0, 4, 7, 12},   // Major (C E G C)
+  {0, 3, 7, 12},   // Minor (C Eb G C)  
+  {0, 4, 7, 10},   // Dominant 7th
+  {0, 3, 7, 10},   // Minor 7th
+  {0, 4, 8, 12},   // Augmented
+  {0, 3, 6, 12},   // Diminished
+  {0, 2, 7, 12},   // Sus2
+  {0, 5, 7, 12}    // Sus4
+};
+
+// mGB Arpeggiator Mode  
+volatile byte arpNotes[ARP_MAX_NOTES];           // Notes in current arpeggio
+volatile byte arpNoteCount = 0;                  // Number of active notes
+volatile byte arpPosition = 0;                   // Current arp position
+volatile byte arpPattern = 0;                    // Arp pattern (up/down/etc)
+volatile byte arpSpeed = 4;                      // Clock divisions
+volatile byte arpStepCounter = 0;                // Internal step counter
+
+// mGB Scales Mode
+volatile byte currentScale = 0;                  // Active scale index
+volatile byte scaleRoot = 60;                    // Scale root note
+const byte scales[MAX_SCALES][SCALE_LENGTH] = {  // Scale patterns (semitones)
+  {0,2,4,5,7,9,11,12,14,16,17,19},  // Major
+  {0,2,3,5,7,8,10,12,14,15,17,19},  // Natural Minor  
+  {0,2,3,5,7,9,11,12,14,15,17,19},  // Dorian
+  {0,1,3,5,7,8,10,12,13,15,17,19},  // Phrygian
+  {0,2,4,6,7,9,11,12,14,16,18,19},  // Lydian
+  {0,2,4,5,7,9,10,12,14,16,17,19},  // Mixolydian
+  {0,2,3,5,7,8,9,12,14,15,17,19},   // Aeolian
+  {0,1,3,5,6,8,10,12,13,15,17,18}   // Locrian
+};
+
+// mGB Grids Mode (simplified Euclidean/pattern generator)
+volatile byte gridsPattern = 0;                  // Current pattern
+volatile byte gridsStep = 0;                     // Current step
+volatile byte gridsAccent[GRIDS_TRACKS];         // Accent levels per track
+volatile byte gridsDensity[GRIDS_TRACKS] = {8,6,4,2}; // Pattern density per track
+const byte gridsPatterns[4][16] = {              // Simple pattern library
+  {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0},  // Track 1: Kick pattern
+  {0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0},  // Track 2: Snare pattern  
+  {1,0,0,1,0,1,0,0,1,0,0,1,0,1,0,0},  // Track 3: Hi-hat pattern
+  {0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,1}   // Track 4: Accent pattern
+};
 
 // ============================================================================
 // SETUP AND MAIN LOOP
@@ -148,6 +236,25 @@ void loop() {
 
 boolean RK002_onNoteOn(byte channel, byte note, byte velocity) {
   switch (currentMode) {
+    case MODE_LSDJ_SYNC:
+      // Clock sync mode doesn't handle note events
+      return true;
+      
+    case MODE_MGB_BASIC:
+      return handleMGBBasicNoteOn(channel, note, velocity);
+      
+    case MODE_MGB_CHORD:
+      return handleMGBChordNoteOn(channel, note, velocity);
+      
+    case MODE_MGB_ARPEGGIO:
+      return handleMGBArpeggioNoteOn(channel, note, velocity);
+      
+    case MODE_MGB_SCALES:
+      return handleMGBScalesNoteOn(channel, note, velocity);
+      
+    case MODE_MGB_GRIDS:
+      return handleMGBGridsNoteOn(channel, note, velocity);
+      
     case MODE_LSDJ_KEYBOARD:
       return handleLSDJKeyboardNoteOn(channel, note, velocity);
       
@@ -156,24 +263,31 @@ boolean RK002_onNoteOn(byte channel, byte note, byte velocity) {
       
     case MODE_NANOLOOP_SYNC:
       return handleNanoloopNoteOn(channel, note, velocity);
-      
-    case MODE_CUSTOM_1:
-      return handleCustom1NoteOn(channel, note, velocity);
-      
-    case MODE_CUSTOM_2:
-      return handleCustom2NoteOn(channel, note, velocity);
-      
-    case MODE_CUSTOM_3:
-      return handleCustom3NoteOn(channel, note, velocity);
-      
-    case MODE_CUSTOM_4:
-      return handleCustom4NoteOn(channel, note, velocity);
   }
   return true; // Pass through MIDI
 }
 
 boolean RK002_onNoteOff(byte channel, byte note, byte velocity) {
   switch (currentMode) {
+    case MODE_LSDJ_SYNC:
+      // Clock sync mode doesn't handle note events
+      return true;
+      
+    case MODE_MGB_BASIC:
+      return handleMGBBasicNoteOff(channel, note, velocity);
+      
+    case MODE_MGB_CHORD:
+      return handleMGBChordNoteOff(channel, note, velocity);
+      
+    case MODE_MGB_ARPEGGIO:
+      return handleMGBArpeggioNoteOff(channel, note, velocity);
+      
+    case MODE_MGB_SCALES:
+      return handleMGBScalesNoteOff(channel, note, velocity);
+      
+    case MODE_MGB_GRIDS:
+      return handleMGBGridsNoteOff(channel, note, velocity);
+      
     case MODE_LSDJ_KEYBOARD:
       return handleLSDJKeyboardNoteOff(channel, note, velocity);
       
@@ -182,18 +296,6 @@ boolean RK002_onNoteOff(byte channel, byte note, byte velocity) {
       
     case MODE_NANOLOOP_SYNC:
       return handleNanoloopNoteOff(channel, note, velocity);
-      
-    case MODE_CUSTOM_1:
-      return handleCustom1NoteOff(channel, note, velocity);
-      
-    case MODE_CUSTOM_2:
-      return handleCustom2NoteOff(channel, note, velocity);
-      
-    case MODE_CUSTOM_3:
-      return handleCustom3NoteOff(channel, note, velocity);
-      
-    case MODE_CUSTOM_4:
-      return handleCustom4NoteOff(channel, note, velocity);
   }
   return true;
 }
@@ -224,6 +326,18 @@ boolean RK002_onControlChange(byte channel, byte cc, byte value) {
       }
       break;
       
+    case 21:  // mGB Mode Parameter 1
+      handleMGBParameter1(value);
+      break;
+      
+    case 22:  // mGB Mode Parameter 2
+      handleMGBParameter2(value);
+      break;
+      
+    case 23:  // mGB Mode Parameter 3
+      handleMGBParameter3(value);
+      break;
+      
     case 64:  // Sustain - Start/Stop
       if (value >= 64) {
         startClock();
@@ -244,6 +358,7 @@ boolean RK002_onProgramChange(byte channel, byte program) {
 }
 
 boolean RK002_onClock() {
+  // Handle LSDJ/Nanoloop sync modes  
   if (currentMode == MODE_LSDJ_SYNC || currentMode == MODE_NANOLOOP_SYNC) {
     clockDivider++;
     if (clockDivider >= CLOCK_DIVISION) {
@@ -253,6 +368,17 @@ boolean RK002_onClock() {
       }
     }
   }
+  
+  // Handle mGB arpeggiator and grids timing
+  if (clockRunning) {
+    if (currentMode == MODE_MGB_ARPEGGIO) {
+      handleMGBArpeggioClock();
+    }
+    else if (currentMode == MODE_MGB_GRIDS) {
+      handleMGBGridsClock();
+    }
+  }
+  
   return true;
 }
 
@@ -260,6 +386,17 @@ boolean RK002_onStart() {
   if (currentMode == MODE_LSDJ_SYNC || currentMode == MODE_NANOLOOP_SYNC) {
     startClock();
   }
+  
+  // Reset mGB mode timing
+  if (currentMode == MODE_MGB_ARPEGGIO) {
+    arpPosition = 0;
+    arpStepCounter = 0;
+  }
+  
+  if (currentMode == MODE_MGB_GRIDS) {
+    gridsStep = 0;
+  }
+  
   return true;
 }
 
@@ -267,6 +404,17 @@ boolean RK002_onStop() {
   if (currentMode == MODE_LSDJ_SYNC || currentMode == MODE_NANOLOOP_SYNC) {
     stopClock();
   }
+  
+  // Stop all mGB notes when clock stops
+  if (currentMode == MODE_MGB_ARPEGGIO || currentMode == MODE_MGB_GRIDS) {
+    for (byte i = 0; i < MGB_CHANNELS; i++) {
+      if (mgbNoteOn[i]) {
+        sendMGBNoteOff(i, mgbLastNote[i]);
+        mgbNoteOn[i] = false;
+      }
+    }
+  }
+  
   return true;
 }
 
@@ -490,50 +638,349 @@ boolean handleNanoloopNoteOff(byte channel, byte note, byte velocity) {
   return true;
 }
 
-// Custom Modes
-boolean handleCustom1NoteOn(byte channel, byte note, byte velocity) {
-  // Your custom mode implementation
-  return true;
+// ============================================================================
+// mGB MODE IMPLEMENTATIONS
+// ============================================================================
+
+// mGB Basic Mode - Direct note mapping to Game Boy channels
+boolean handleMGBBasicNoteOn(byte channel, byte note, byte velocity) {
+  // Map MIDI channel to Game Boy channel (1-4 → 0-3)
+  if (channel < 1 || channel > 4) return true;
+  
+  byte gbChannel = channel - 1;
+  
+  // Stop previous note if playing
+  if (mgbNoteOn[gbChannel]) {
+    sendMGBNoteOff(gbChannel, mgbLastNote[gbChannel]);
+  }
+  
+  // Send new note to Game Boy
+  sendMGBNoteOn(gbChannel, note, velocity);
+  mgbLastNote[gbChannel] = note;
+  mgbNoteOn[gbChannel] = true;
+  
+  return false; // Block MIDI passthrough
 }
 
-boolean handleCustom1NoteOff(byte channel, byte note, byte velocity) {
-  // Your custom mode implementation
-  return true;
+boolean handleMGBBasicNoteOff(byte channel, byte note, byte velocity) {
+  if (channel < 1 || channel > 4) return true;
+  
+  byte gbChannel = channel - 1;
+  
+  if (mgbNoteOn[gbChannel] && mgbLastNote[gbChannel] == note) {
+    sendMGBNoteOff(gbChannel, note);
+    mgbNoteOn[gbChannel] = false;
+  }
+  
+  return false;
 }
 
-boolean handleCustom2NoteOn(byte channel, byte note, byte velocity) {
-  // Your custom mode implementation
-  return true;
+// mGB Chord Mode - Trigger chords across all 4 Game Boy channels
+boolean handleMGBChordNoteOn(byte channel, byte note, byte velocity) {
+  if (channel != midiChannel) return true; // Only respond to selected channel
+  
+  // Stop all previous notes
+  for (byte i = 0; i < MGB_CHANNELS; i++) {
+    if (mgbNoteOn[i]) {
+      sendMGBNoteOff(i, mgbLastNote[i]);
+      mgbNoteOn[i] = false;
+    }
+  }
+  
+  // Play chord across all 4 channels
+  chordRoot = note;
+  for (byte i = 0; i < MGB_CHANNELS; i++) {
+    byte chordNote = note + chordPatterns[chordType][i];
+    if (chordNote < 128) { // Valid MIDI range
+      sendMGBNoteOn(i, chordNote, velocity);
+      mgbLastNote[i] = chordNote;
+      mgbNoteOn[i] = true;
+    }
+  }
+  
+  return false;
 }
 
-boolean handleCustom2NoteOff(byte channel, byte note, byte velocity) {
-  // Your custom mode implementation
-  return true;
+boolean handleMGBChordNoteOff(byte channel, byte note, byte velocity) {
+  if (channel != midiChannel || note != chordRoot) return true;
+  
+  // Stop all chord notes
+  for (byte i = 0; i < MGB_CHANNELS; i++) {
+    if (mgbNoteOn[i]) {
+      sendMGBNoteOff(i, mgbLastNote[i]);
+      mgbNoteOn[i] = false;
+    }
+  }
+  
+  return false;
 }
 
-boolean handleCustom3NoteOn(byte channel, byte note, byte velocity) {
-  // Your custom mode implementation
-  return true;
+// mGB Arpeggiator Mode - Arpeggio notes across channels
+boolean handleMGBArpeggioNoteOn(byte channel, byte note, byte velocity) {
+  if (channel != midiChannel) return true;
+  
+  // Add note to arpeggio if not already present
+  boolean noteExists = false;
+  for (byte i = 0; i < arpNoteCount; i++) {
+    if (arpNotes[i] == note) {
+      noteExists = true;
+      break;
+    }
+  }
+  
+  if (!noteExists && arpNoteCount < ARP_MAX_NOTES) {
+    arpNotes[arpNoteCount] = note;
+    arpNoteCount++;
+    
+    // Sort notes for arpeggio (simple bubble sort)
+    for (byte i = 0; i < arpNoteCount - 1; i++) {
+      for (byte j = i + 1; j < arpNoteCount; j++) {
+        if (arpNotes[i] > arpNotes[j]) {
+          byte temp = arpNotes[i];
+          arpNotes[i] = arpNotes[j];
+          arpNotes[j] = temp;
+        }
+      }
+    }
+  }
+  
+  return false;
 }
 
-boolean handleCustom3NoteOff(byte channel, byte note, byte velocity) {
-  // Your custom mode implementation
-  return true;
+boolean handleMGBArpeggioNoteOff(byte channel, byte note, byte velocity) {
+  if (channel != midiChannel) return true;
+  
+  // Remove note from arpeggio
+  for (byte i = 0; i < arpNoteCount; i++) {
+    if (arpNotes[i] == note) {
+      // Shift remaining notes down
+      for (byte j = i; j < arpNoteCount - 1; j++) {
+        arpNotes[j] = arpNotes[j + 1];
+      }
+      arpNoteCount--;
+      break;
+    }
+  }
+  
+  // Stop arpeggio if no notes left
+  if (arpNoteCount == 0) {
+    for (byte i = 0; i < MGB_CHANNELS; i++) {
+      if (mgbNoteOn[i]) {
+        sendMGBNoteOff(i, mgbLastNote[i]);
+        mgbNoteOn[i] = false;
+      }
+    }
+  }
+  
+  return false;
 }
 
-boolean handleCustom4NoteOn(byte channel, byte note, byte velocity) {
-  // Your custom mode implementation
-  return true;
+// mGB Scales Mode - Quantize notes to musical scales
+boolean handleMGBScalesNoteOn(byte channel, byte note, byte velocity) {
+  if (channel != midiChannel) return true;
+  
+  // Quantize note to current scale
+  byte scaledNote = quantizeToScale(note, currentScale, scaleRoot);
+  
+  // Use simple round-robin channel assignment
+  static byte nextChannel = 0;
+  
+  // Stop previous note on this channel
+  if (mgbNoteOn[nextChannel]) {
+    sendMGBNoteOff(nextChannel, mgbLastNote[nextChannel]);
+  }
+  
+  // Play scaled note
+  sendMGBNoteOn(nextChannel, scaledNote, velocity);
+  mgbLastNote[nextChannel] = scaledNote;
+  mgbNoteOn[nextChannel] = true;
+  
+  // Move to next channel
+  nextChannel = (nextChannel + 1) % MGB_CHANNELS;
+  
+  return false;
 }
 
-boolean handleCustom4NoteOff(byte channel, byte note, byte velocity) {
-  // Your custom mode implementation
-  return true;
+boolean handleMGBScalesNoteOff(byte channel, byte note, byte velocity) {
+  if (channel != midiChannel) return true;
+  
+  byte scaledNote = quantizeToScale(note, currentScale, scaleRoot);
+  
+  // Find and stop the scaled note
+  for (byte i = 0; i < MGB_CHANNELS; i++) {
+    if (mgbNoteOn[i] && mgbLastNote[i] == scaledNote) {
+      sendMGBNoteOff(i, scaledNote);
+      mgbNoteOn[i] = false;
+      break;
+    }
+  }
+  
+  return false;
+}
+
+// mGB Grids Mode - Euclidean pattern generation for Game Boy
+boolean handleMGBGridsNoteOn(byte channel, byte note, byte velocity) {
+  // Grids mode is primarily clock-driven
+  // Notes can be used to change pattern parameters
+  if (channel == midiChannel) {
+    // Use note value to select pattern
+    gridsPattern = note % GRIDS_PATTERNS;
+  }
+  
+  return false;
+}
+
+boolean handleMGBGridsNoteOff(byte channel, byte note, byte velocity) {
+  // Notes don't directly trigger in grids mode
+  return false;
+}
+
+// Clock-driven functions for tempo-synced modes
+void handleMGBArpeggioClock() {
+  if (arpNoteCount == 0) return;
+  
+  arpStepCounter++;
+  if (arpStepCounter >= arpSpeed) {
+    arpStepCounter = 0;
+    
+    // Stop current note
+    byte currentChannel = arpPosition % MGB_CHANNELS;
+    if (mgbNoteOn[currentChannel]) {
+      sendMGBNoteOff(currentChannel, mgbLastNote[currentChannel]);
+      mgbNoteOn[currentChannel] = false;
+    }
+    
+    // Play next note in arpeggio
+    byte noteIndex;
+    switch (arpPattern) {
+      case 0: // Up
+        noteIndex = arpPosition % arpNoteCount;
+        break;
+      case 1: // Down  
+        noteIndex = (arpNoteCount - 1) - (arpPosition % arpNoteCount);
+        break;
+      case 2: // Up/Down
+        {
+          byte cycle = arpPosition % (arpNoteCount * 2 - 2);
+          if (cycle < arpNoteCount) {
+            noteIndex = cycle;
+          } else {
+            noteIndex = (arpNoteCount * 2 - 2) - cycle;
+          }
+        }
+        break;
+      case 3: // Random
+        noteIndex = RK002_random() % arpNoteCount;
+        break;
+      default:
+        noteIndex = 0;
+    }
+    
+    sendMGBNoteOn(currentChannel, arpNotes[noteIndex], 100);
+    mgbLastNote[currentChannel] = arpNotes[noteIndex];
+    mgbNoteOn[currentChannel] = true;
+    
+    arpPosition++;
+  }
+}
+
+void handleMGBGridsClock() {
+  static byte clockCounter = 0;
+  
+  clockCounter++;
+  if (clockCounter >= 6) { // 16th note timing
+    clockCounter = 0;
+    
+    // Trigger patterns for each Game Boy channel
+    for (byte track = 0; track < GRIDS_TRACKS; track++) {
+      if (gridsPatterns[track][gridsStep]) {
+        // Trigger note based on track
+        byte note = 36 + (track * 12); // Different octaves per track
+        sendMGBNoteOn(track, note, 80 + gridsAccent[track]);
+        mgbLastNote[track] = note;
+        mgbNoteOn[track] = true;
+      }
+    }
+    
+    gridsStep = (gridsStep + 1) % GRIDS_STEPS;
+  }
 }
 
 // ============================================================================
 // HELPER FUNCTIONS - Add mapping and utility functions
 // ============================================================================
+
+// mGB Game Boy Communication Functions
+void sendMGBNoteOn(byte channel, byte note, byte velocity) {
+  if (channel >= MGB_CHANNELS) return;
+  
+  // Convert MIDI note to Game Boy frequency
+  byte gbNote = mapMIDIToGameBoyNote(note);
+  byte gbVelocity = mapMIDIToGameBoyVelocity(velocity);
+  
+  // Send mGB command sequence
+  byte cmdByte = MGB_CMD_NOTE | channel;
+  
+  gameBoySendByte(cmdByte);     // Command + channel
+  gameBoySendByte(gbNote);      // Note value
+  gameBoySendByte(gbVelocity);  // Velocity
+  gameBoySendByte(0x00);        // Length (not used in mGB)
+}
+
+void sendMGBNoteOff(byte channel, byte note) {
+  if (channel >= MGB_CHANNELS) return;
+  
+  byte cmdByte = MGB_CMD_NOTE | channel;
+  
+  gameBoySendByte(cmdByte);     
+  gameBoySendByte(0x00);        // Note 0 = note off
+  gameBoySendByte(0x00);        // Zero velocity
+  gameBoySendByte(0x00);        
+}
+
+// Musical scale quantization
+byte quantizeToScale(byte note, byte scaleIndex, byte root) {
+  if (scaleIndex >= MAX_SCALES) return note;
+  
+  // Calculate note relative to scale root
+  int noteOffset = note - root;
+  int octave = noteOffset / 12;
+  int semitone = noteOffset % 12;
+  
+  if (semitone < 0) {
+    semitone += 12;
+    octave--;
+  }
+  
+  // Find closest note in scale
+  byte closestNote = 0;
+  byte minDistance = 12;
+  
+  for (byte i = 0; i < SCALE_LENGTH; i++) {
+    byte scaleNote = scales[scaleIndex][i] % 12;
+    byte distance = abs(semitone - scaleNote);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestNote = scaleNote;
+    }
+  }
+  
+  return root + (octave * 12) + closestNote;
+}
+
+byte mapMIDIToGameBoyNote(byte midiNote) {
+  // Game Boy uses specific frequency table
+  // Map MIDI notes to closest Game Boy frequencies
+  if (midiNote < 24) return 0;    // Below Game Boy range
+  if (midiNote > 119) return 95;  // Above Game Boy range
+  return midiNote - 24;           // Offset for Game Boy range
+}
+
+byte mapMIDIToGameBoyVelocity(byte velocity) {
+  // Convert MIDI velocity (0-127) to Game Boy volume (0-15)
+  if (velocity == 0) return 0;
+  return (velocity >> 3) + 1; // Divide by 8, minimum 1
+}
 
 byte mapMIDIToLSDJNote(byte midiNote) {
   // Convert MIDI note (0-127) to LSDJ format (0-95)
@@ -611,6 +1058,75 @@ void saveSettings() {
   
   // Set magic byte to indicate settings are valid
   EEPROM.write(EEPROM_MAGIC_ADDR, EEPROM_MAGIC_VALUE);
+}
+
+// ============================================================================
+// mGB PARAMETER CONTROL FUNCTIONS
+// ============================================================================
+
+void handleMGBParameter1(byte value) {
+  switch (currentMode) {
+    case MODE_MGB_CHORD:
+      // Change chord type (0-7)
+      chordType = (value * 8) / 128;
+      if (chordType > 7) chordType = 7;
+      flashStatusPattern(chordType + 1, 100, 100); // Visual feedback
+      break;
+      
+    case MODE_MGB_ARPEGGIO:
+      // Change arpeggio pattern (0-3)  
+      arpPattern = (value * 4) / 128;
+      if (arpPattern > 3) arpPattern = 3;
+      flashStatusPattern(arpPattern + 1, 150, 50);
+      break;
+      
+    case MODE_MGB_SCALES:
+      // Change scale type (0-7)
+      currentScale = (value * MAX_SCALES) / 128;
+      if (currentScale >= MAX_SCALES) currentScale = MAX_SCALES - 1;
+      flashStatusPattern(currentScale + 1, 80, 120);
+      break;
+      
+    case MODE_MGB_GRIDS:
+      // Change pattern for track 1
+      gridsDensity[0] = (value / 8) + 1; // 1-16 range
+      break;
+  }
+}
+
+void handleMGBParameter2(byte value) {
+  switch (currentMode) {
+    case MODE_MGB_ARPEGGIO:
+      // Change arpeggio speed (1-16)
+      arpSpeed = (value / 8) + 1;
+      break;
+      
+    case MODE_MGB_SCALES:
+      // Change scale root note
+      scaleRoot = (value * 12) / 128 + 60; // C3-B3 range
+      break;
+      
+    case MODE_MGB_GRIDS:
+      // Change pattern for track 2
+      gridsDensity[1] = (value / 8) + 1;
+      break;
+  }
+}
+
+void handleMGBParameter3(byte value) {
+  switch (currentMode) {
+    case MODE_MGB_GRIDS:
+      // Change accent level for all tracks
+      for (byte i = 0; i < GRIDS_TRACKS; i++) {
+        gridsAccent[i] = value / 8; // 0-15 range
+      }
+      break;
+      
+    case MODE_MGB_CHORD:
+      // Change chord inversion
+      // Implementation could add chord inversions here
+      break;
+  }
 }
 
 // GPIO error handling

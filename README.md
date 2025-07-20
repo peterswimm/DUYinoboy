@@ -48,15 +48,51 @@ DUYinoboy brings ArduinoBoy functionality to the ultra-compact RK-002 platform, 
 
 ## 📋 Supported Modes
 
-**Note**: DUYinoboy is optimized for MIDI input only - LSDJ runs as MIDI clock follower
+**Note**: DUYinoboy supports MIDI input only - all modes operate as MIDI clock followers
 
-| Mode | Function | Game Boy Software |
-|------|----------|-------------------|
-| 0 | LSDJ MIDI Clock Sync | LSDJ (slave sync mode) |
-| 1 | LSDJ Keyboard Mode | LSDJ Keyboard mode |
-| 2 | LSDJ Map Mode | LSDJ (channels 1-4) |
-| 3 | Nanoloop MIDI Clock Sync | Nanoloop 1.x (slave sync) |
-| 4-7 | Custom Modes | User-definable |
+| Mode | Function | Game Boy Software | MIDI Channel |
+|------|----------|-------------------|--------------|
+| 0 | LSDJ MIDI Clock Sync | LSDJ (slave sync mode) | N/A (clock only) |
+| 1 | mGB Basic Mode | mGB ROM | Channels 1-4 → GB Channels |
+| 2 | mGB Chord Mode | mGB ROM | Selected channel |
+| 3 | mGB Arpeggiator | mGB ROM | Selected channel |
+| 4 | mGB with Scales | mGB ROM | Selected channel |
+| 5 | mGB with Grids | mGB ROM | Pattern triggers |
+| 6 | LSDJ Keyboard Mode | LSDJ Keyboard mode | Selected channel |
+| 7 | LSDJ Map Mode | LSDJ (channels 1-4) | Configurable |
+| 8 | Nanoloop MIDI Clock Sync | Nanoloop 1.x (slave sync) | N/A (clock only) |
+
+### mGB Mode Details
+
+**mGB Basic** (Mode 1): Direct note control
+- MIDI Ch 1 → Game Boy Pulse 1
+- MIDI Ch 2 → Game Boy Pulse 2  
+- MIDI Ch 3 → Game Boy Wave
+- MIDI Ch 4 → Game Boy Noise
+
+**mGB Chord** (Mode 2): Intelligent chord generation
+- Single notes trigger chords across all 4 Game Boy channels
+- CC 21: Chord type (Major, Minor, 7th, etc.)
+- CC 22: Chord inversion
+- 8 built-in chord types
+
+**mGB Arpeggiator** (Mode 3): Pattern-based arpeggios
+- Notes held in memory, arpeggiated across channels
+- CC 21: Arpeggio pattern (Up, Down, Up/Down, Random)
+- CC 22: Arpeggio speed (1-16 clock divisions)
+- MIDI clock sync for tempo
+
+**mGB Scales** (Mode 4): Musical scale quantization
+- Notes quantized to musical scales in real-time
+- CC 21: Scale type (Major, Minor, Dorian, etc.)
+- CC 22: Scale root note
+- 8 built-in musical scales
+
+**mGB Grids** (Mode 5): Euclidean pattern generation
+- Inspired by Mutable Instruments Grids
+- 4-track Euclidean patterns for Game Boy channels
+- CC 21-23: Pattern density and accent control
+- MIDI clock driven for rhythmic patterns
 
 ## 🔧 Hardware Requirements
 

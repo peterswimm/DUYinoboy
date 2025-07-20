@@ -16,27 +16,29 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 | Program | Mode | Function | Game Boy Software |
 |---------|------|----------|-------------------|
 | 0 | LSDJ MIDI Clock Sync | Follow external MIDI clock | LSDJ (slave sync mode) |
-| 1 | LSDJ Keyboard Mode | Real-time note input | LSDJ Keyboard mode |
-| 2 | LSDJ Map Mode | 4-channel polyphonic | LSDJ (channels 1-4) |
-| 3 | Nanoloop MIDI Clock Sync | Follow external MIDI clock | Nanoloop 1.x (slave sync) |
-| 4 | Custom Mode 1 | User-definable | Custom software |
-| 5 | Custom Mode 2 | User-definable | Custom software |
-| 6 | Custom Mode 3 | User-definable | Custom software |
-| 7 | Custom Mode 4 | User-definable | Custom software |
+| 1 | mGB Basic Mode | Direct channel control | mGB ROM |
+| 2 | mGB Chord Mode | Intelligent chord generation | mGB ROM |
+| 3 | mGB Arpeggiator | Pattern-based arpeggios | mGB ROM |
+| 4 | mGB with Scales | Musical scale quantization | mGB ROM |
+| 5 | mGB with Grids | Euclidean pattern generation | mGB ROM |
+| 6 | LSDJ Keyboard Mode | Real-time note input | LSDJ Keyboard mode |
+| 7 | LSDJ Map Mode | 4-channel polyphonic | LSDJ (channels 1-4) |
+| 8 | Nanoloop MIDI Clock Sync | Follow external MIDI clock | Nanoloop 1.x (slave sync) |
 
-**Example**: Send Program Change 1 to select LSDJ Keyboard mode.
+**Example**: Send Program Change 2 to select mGB Chord mode.
 
 ### Alternative: Mod Wheel (CC1)
 | CC1 Value | Mode Selected |
 |-----------|---------------|
-| 0-15 | Mode 0 (LSDJ Clock Sync) |
-| 16-31 | Mode 1 (LSDJ Keyboard) |
-| 32-47 | Mode 2 (LSDJ Map) |
-| 48-63 | Mode 3 (Nanoloop Clock Sync) |
-| 64-79 | Mode 4 (Custom 1) |
-| 80-95 | Mode 5 (Custom 2) |
-| 96-111 | Mode 6 (Custom 3) |
-| 112-127 | Mode 7 (Custom 4) |
+| 0-14 | Mode 0 (LSDJ Clock Sync) |
+| 15-28 | Mode 1 (mGB Basic) |
+| 29-42 | Mode 2 (mGB Chord) |
+| 43-56 | Mode 3 (mGB Arpeggiator) |
+| 57-70 | Mode 4 (mGB Scales) |
+| 71-84 | Mode 5 (mGB Grids) |
+| 85-98 | Mode 6 (LSDJ Keyboard) |
+| 99-112 | Mode 7 (LSDJ Map) |
+| 113-127 | Mode 8 (Nanoloop Sync) |
 
 ## Note Messages
 
@@ -45,6 +47,11 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 
 | Mode | Note Behavior |
 |------|---------------|
+| mGB Basic | Direct mapping: MIDI Ch 1-4 → GB Channels 1-4 |
+| mGB Chord | Single notes trigger chords across all channels |
+| mGB Arpeggiator | Notes held and arpeggiated across channels |
+| mGB Scales | Notes quantized to selected musical scale |
+| mGB Grids | Notes change pattern parameters |
 | LSDJ Keyboard | Single channel, real-time play |
 | LSDJ Map | Polyphonic across 4 channels |
 | Nanoloop Clock Sync | Trigger samples/steps |
@@ -158,6 +165,107 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 - Each MIDI channel maps to LSDJ channel
 - Up to 4-note polyphony
 - Independent channel control
+
+### Nanoloop MIDI Clock Sync Mode (8)
+**MIDI Input**:
+- MIDI Clock: Follow external clock
+- Note On: Trigger samples
+- Start/Stop/Continue: Transport control
+
+**Behavior**:
+- Follows incoming MIDI clock
+- Notes trigger sample steps
+- No internal clock generation
+
+## mGB Mode MIDI Implementation
+
+### mGB Basic Mode (1)
+**MIDI Input**:
+- Note On/Off: Direct channel mapping
+- MIDI Ch 1 → Game Boy Pulse 1
+- MIDI Ch 2 → Game Boy Pulse 2
+- MIDI Ch 3 → Game Boy Wave
+- MIDI Ch 4 → Game Boy Noise
+
+**Behavior**:
+- Each MIDI channel directly controls a Game Boy sound channel
+- Polyphonic across all 4 channels simultaneously
+- Note range automatically mapped to Game Boy frequency table
+
+### mGB Chord Mode (2)
+**MIDI Input**:
+- Note On/Off: Chord triggers (selected MIDI channel only)
+- CC21: Chord type selection (0-127 → 8 chord types)
+- CC22: Chord inversion (future implementation)
+
+**Chord Types** (CC21 ranges):
+- 0-15: Major (C E G C)
+- 16-31: Minor (C Eb G C)
+- 32-47: Dominant 7th (C E G Bb)
+- 48-63: Minor 7th (C Eb G Bb)
+- 64-79: Augmented (C E G#)
+- 80-95: Diminished (C Eb Gb)
+- 96-111: Sus2 (C D G C)
+- 112-127: Sus4 (C F G C)
+
+**Behavior**:
+- Single note input triggers 4-note chords across all Game Boy channels
+- Real-time chord type changes via MIDI CC
+- Chord follows root note transposition
+
+### mGB Arpeggiator Mode (3)
+**MIDI Input**:
+- Note On/Off: Build arpeggio note collection
+- MIDI Clock: Arpeggio timing
+- CC21: Arpeggio pattern (0-127 → 4 patterns)
+- CC22: Arpeggio speed (0-127 → 1-16 clock divisions)
+
+**Arpeggio Patterns** (CC21):
+- 0-31: Up (ascending)
+- 32-63: Down (descending)
+- 64-95: Up/Down (ping-pong)
+- 96-127: Random
+
+**Behavior**:
+- Hold multiple notes to build arpeggio
+- Notes automatically sorted for pattern playback
+- MIDI clock sync for tempo-locked arpeggios
+- Round-robin across Game Boy channels
+
+### mGB Scales Mode (4)
+**MIDI Input**:
+- Note On/Off: Notes quantized to selected scale
+- CC21: Scale type (0-127 → 8 musical scales)
+- CC22: Scale root note (0-127 → chromatic root)
+
+**Musical Scales** (CC21):
+- 0-15: Major (Ionian)
+- 16-31: Natural Minor (Aeolian)
+- 32-47: Dorian
+- 48-63: Phrygian
+- 64-79: Lydian
+- 80-95: Mixolydian
+- 96-111: Locrian
+- 112-127: Harmonic Minor
+
+**Behavior**:
+- All incoming notes quantized to selected scale
+- Real-time scale and root changes
+- Round-robin channel assignment for polyphony
+
+### mGB Grids Mode (5)
+**MIDI Input**:
+- MIDI Clock: Pattern timing
+- Note On: Pattern selection/triggering
+- CC21: Track 1 density (0-127 → 1-16 steps)
+- CC22: Track 2 density (0-127 → 1-16 steps)  
+- CC23: Accent level (0-127 → 0-15 accent amount)
+
+**Behavior**:
+- Euclidean/grid-based pattern generation
+- 4 tracks mapped to Game Boy channels
+- MIDI clock drives 16-step patterns
+- Real-time pattern density control
 
 ### Nanoloop MIDI Clock Sync Mode (3)
 **MIDI Input**:
