@@ -18,7 +18,7 @@ Complete guide to programming the RK-002 with DUYinoboy firmware.
 ### Setup
 1. **Visit**: [DUY Web Editor](https://duy.retrokits.com/)
 2. **Register**: Create account for code editing and sharing
-3. **Connect RK-002**: MIDI OUT → RK-002 MIDI IN
+3. **Connect RK-002**: MIDI controller → RK-002 MIDI IN (RK-002 is input only)
 4. **Install DUY Base**: Upload DUY firmware first
 5. **Verify Connection**: Check that RK-002 is detected
 
@@ -83,7 +83,7 @@ void loop() {
 3. **Create Sketch**: Use DUYinoboy template
 
 ### Programming Process
-1. **Connect Hardware**: MIDI OUT → RK-002 MIDI IN
+1. **Connect Hardware**: MIDI controller → RK-002 MIDI IN
 2. **Verify Code**: Click verify button (✓)
 3. **Upload**: Click upload button (→)
 4. **Monitor**: Check IDE messages for success
@@ -119,11 +119,8 @@ boolean RK002_onStart();
 boolean RK002_onStop();
 boolean RK002_onContinue();
 
-// MIDI output functions (only if MIDI OUT connected)
-RK002_sendNoteOn(channel, key, velocity);
-RK002_sendNoteOff(channel, key, velocity);
-RK002_sendControlChange(channel, cc, value);
-RK002_sendProgramChange(channel, program);
+// Note: RK-002 does not support MIDI output
+// All communication with Game Boy is via GPIO pins
 ```
 
 ### Memory Management
@@ -212,11 +209,13 @@ void flashError(byte count) {
 }
 ```
 
-### MIDI Debug Output
+### Game Boy Communication Debug
 ```cpp
-void debugValue(byte value) {
-  // Send debug info via MIDI CC (if MIDI OUT available)
-  RK002_sendControlChange(16, 120, value);
+void debugGameBoyComm() {
+  // Send test pattern to Game Boy for debugging
+  sendGameBoyByte(0xAA);  // Alternating bit pattern
+  sendGameBoyByte(0x55);  // Inverse pattern
+  // Check Game Boy response via SOUT pin if connected
 }
 ```
 
@@ -234,7 +233,7 @@ void sendDebugPattern() {
 ### Upload Fails
 - **MIDI Interface**: Must support SysEx messages
 - **Power**: RK-002 must be powered by MIDI port
-- **Connection**: Check MIDI OUT → RK-002 MIDI IN
+- **Connection**: Check MIDI controller → RK-002 MIDI IN
 - **Drivers**: Ensure MIDI interface drivers installed
 
 ### Code Compilation Errors

@@ -9,10 +9,11 @@ Complete guide for testing and simulating DUYinoboy code using online Arduino de
 
 **Features**:
 - Real-time Arduino simulation
-- MIDI input/output support
+- MIDI input support
 - GPIO pin visualization
 - Serial monitor
 - Oscilloscope for timing analysis
+- **Note**: RK-002 is MIDI input only (no MIDI output)
 
 **Setup for DUYinoboy**:
 ```cpp

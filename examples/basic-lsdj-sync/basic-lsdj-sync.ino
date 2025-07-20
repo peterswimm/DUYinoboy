@@ -14,9 +14,9 @@ RK002_DECLARE_INFO(
   "lsdj-sync-basic-2025-example-uuid"
 );
 
-// Mode definitions
-#define MODE_MASTER 0
-#define MODE_SLAVE  1
+// Mode definitions - using official ArduinoBoy terminology
+#define MODE_MASTER 0  // LSDJ as MIDI Master Sync
+#define MODE_SLAVE  1  // LSDJ as MIDI Slave Sync
 
 // GPIO pins
 #define GB_SIN      1

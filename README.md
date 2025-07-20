@@ -50,21 +50,25 @@ DUYinoboy brings all the functionality of ArduinoBoy to the ultra-compact RK-002
 |------|----------|-------------------|
 | 0 | LSDJ Master Sync | LSDJ (any version) |
 | 1 | LSDJ Slave Sync | LSDJ (any version) |
-| 2 | LSDJ Keyboard | LSDJ Keyboard mode |
+| 2 | LSDJ Keyboard Mode | LSDJ Keyboard mode |
 | 3 | LSDJ Map Mode | LSDJ (channels 1-4) |
-| 4 | Nanoloop Master | Nanoloop 1.x |
-| 5 | Nanoloop Slave | Nanoloop 1.x |
+| 4 | Nanoloop Master Sync | Nanoloop 1.x |
+| 5 | Nanoloop Slave Sync | Nanoloop 1.x |
 | 6-7 | Custom Modes | User-definable |
 
 ## 🔧 Hardware Requirements
 
 ### RK-002 Specifications
 - **GPIO Pins**: Exactly 2 pins available for I/O
+- **MIDI**: Input only (no MIDI output capability)
 - **Power**: MIDI bus powered (requires MIDI interface with power support)
 - **Programming**: Via MIDI interface using Arduino IDE or [DUY Web Editor](https://duy.retrokits.com/)
 - **Platform**: ARM-based microcontroller with Arduino compatibility
 - **Cable Length**: ~1.5 meters
 - **Expansion**: Compatible with [RK-202 Buttonboard](https://retrokits.com/shop/rk202/) for additional controls
+
+### Clock Generation vs MIDI Output
+DUYinoboy's "Master" modes create timing signals via GPIO pins to synchronize the Game Boy, **not MIDI output**. The RK-002 hardware only supports MIDI input - all Game Boy communication happens through the 2 available GPIO pins.
 
 ### Game Boy Link Cable Connections
 - **Pin 2 (SOUT)**: Red wire → RK-002 GPIO 2 (optional)

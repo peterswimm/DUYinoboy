@@ -47,14 +47,14 @@ RK002_DECLARE_INFO(
 // ARDUINOBOY MODE DEFINITIONS
 // ============================================================================
 
-#define MODE_LSDJ_MASTER      0
-#define MODE_LSDJ_SLAVE       1  
-#define MODE_LSDJ_KEYBOARD    2
-#define MODE_LSDJ_MAP         3
-#define MODE_NANOLOOP_MASTER  4
-#define MODE_NANOLOOP_SLAVE   5
-#define MODE_CUSTOM_1         6
-#define MODE_CUSTOM_2         7
+#define MODE_LSDJ_MASTER      0  // LSDJ as MIDI Master Sync
+#define MODE_LSDJ_SLAVE       1  // LSDJ as MIDI Slave Sync  
+#define MODE_LSDJ_KEYBOARD    2  // LSDJ PC Keyboard mode
+#define MODE_LSDJ_MAP         3  // LSDJ MIDIMAP mode (4-channel polyphonic)
+#define MODE_NANOLOOP_MASTER  4  // MIDI to Nanoloop sync (master)
+#define MODE_NANOLOOP_SLAVE   5  // MIDI to Nanoloop sync (slave)
+#define MODE_CUSTOM_1         6  // Custom mode 1
+#define MODE_CUSTOM_2         7  // Custom mode 2
 #define NUM_MODES             8
 
 // ============================================================================

@@ -16,9 +16,10 @@ Common issues and solutions for DUYinoboy setup and operation.
    - **Alternative**: Use different USB-MIDI device
 
 2. **Power Issues**  
-   - **Check**: Is RK-002 getting power from MIDI OUT port?
+   - **Check**: Is RK-002 getting power from MIDI input?
    - **Test**: LED should be visible when connected
    - **Fix**: Use [powered MIDI interface](https://retrokits.com/shop/rk005/) or MIDI thru box
+   - **Note**: RK-002 is MIDI input only, no MIDI output capability
    - **Reference**: [RK-002 Power Requirements](https://retrokits.com/shop/rk002/)
 
 3. **Wrong Arduino IDE Version**
@@ -171,7 +172,7 @@ Common issues and solutions for DUYinoboy setup and operation.
 **Debugging**:
 
 1. **MIDI Connection**
-   - **Check**: MIDI OUT → RK-002 MIDI IN
+   - **Check**: MIDI controller → RK-002 MIDI IN
    - **Test**: LED should light when MIDI connected
    - **Verify**: Use MIDI monitor software
 
