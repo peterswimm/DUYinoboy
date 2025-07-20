@@ -17,28 +17,32 @@ DUYinoboy brings all the functionality of ArduinoBoy to the ultra-compact RK-002
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Retrokits RK-002 Smart MIDI Cable
+- [Retrokits RK-002 Smart MIDI Cable](https://retrokits.com/shop/rk002/)
 - Game Boy (DMG, GBP, GBC, or GBA)
 - Game Boy Link Cable for modification
-- LSDJ, Nanoloop, or mGB cartridge
+- [Little Sound DJ (LSDJ)](https://www.littlesounddj.com/), [Nanoloop](http://www.nanoloop.com/), or [mGB](https://github.com/trash80/mGB) cartridge
 - Basic soldering skills
+- MIDI interface with MIDI power support
 
 ### Installation
 
 1. **Hardware Setup**
    ```
-   Game Boy Pin 3 (SIN) → RK-002 GPIO 1
-   Game Boy Pin 6 (GND) → RK-002 Ground
-   Game Boy Pin 2 (SOUT) → RK-002 GPIO 2 (optional)
+   Game Boy Pin 3 (SIN) → RK-002 GPIO 1 (required)
+   Game Boy Pin 6 (GND) → RK-002 Ground (required)
+   Game Boy Pin 2 (SOUT) → RK-002 GPIO 2 (optional for bidirectional)
    ```
+   See detailed [Hardware Guide](docs/hardware-guide.md)
 
 2. **Upload Firmware**
-   - Use DUY Web Editor: https://duy.retrokits.com/
-   - Or Arduino IDE 1.8.x with RK-002 board package
+   - **Recommended**: [DUY Web Editor](https://duy.retrokits.com/) - browser-based development
+   - **Alternative**: Arduino IDE 1.8.x with [RK-002 board package](https://retrokits.com/rk002-duy/)
+   - **Simulation**: Use [Wokwi Arduino Simulator](https://wokwi.com/arduino) for testing
 
 3. **Connect and Play**
    - MIDI Keyboard → RK-002 → Game Boy
    - Select mode with MIDI Program Change 0-7
+   - Settings auto-save to EEPROM
 
 ## 📋 Supported Modes
 
@@ -55,10 +59,12 @@ DUYinoboy brings all the functionality of ArduinoBoy to the ultra-compact RK-002
 ## 🔧 Hardware Requirements
 
 ### RK-002 Specifications
-- **GPIO Pins**: Exactly 2 pins available
-- **Power**: MIDI bus powered (5V from MIDI OUT)
-- **Programming**: Via MIDI interface (not USB)
-- **Platform**: ARM-based with Arduino IDE support
+- **GPIO Pins**: Exactly 2 pins available for I/O
+- **Power**: MIDI bus powered (requires MIDI interface with power support)
+- **Programming**: Via MIDI interface using Arduino IDE or [DUY Web Editor](https://duy.retrokits.com/)
+- **Platform**: ARM-based microcontroller with Arduino compatibility
+- **Cable Length**: ~1.5 meters
+- **Expansion**: Compatible with [RK-202 Buttonboard](https://retrokits.com/shop/rk202/) for additional controls
 
 ### Game Boy Link Cable Connections
 - **Pin 2 (SOUT)**: Red wire → RK-002 GPIO 2 (optional)
@@ -69,32 +75,47 @@ DUYinoboy brings all the functionality of ArduinoBoy to the ultra-compact RK-002
 
 ## 🌐 Development Options
 
-### DUY Web Editor (Recommended)
-- Browser-based development
+### [DUY Web Editor](https://duy.retrokits.com/) (Recommended)
+- Browser-based development environment
 - Cloud compilation and storage
-- Direct upload to RK-002
+- Direct upload to RK-002 via MIDI
 - Community sharing built-in
 - Perfect for beginners
+- No local setup required
 
 ### Arduino IDE 1.8.x
 - Local development environment
 - Full control over compilation
 - Traditional Arduino workflow
+- Requires [RK-002 board package installation](https://retrokits.com/rk002-duy/)
 - Better for advanced users
+
+### [Wokwi Arduino Simulator](https://wokwi.com/arduino)
+- Online simulation and testing
+- No hardware required for development
+- Real-time GPIO visualization
+- Perfect for prototyping and learning
+- See [Simulation Guide](docs/simulation-guide.md)
 
 ## 📚 Documentation
 
-- [Complete Hardware Guide](docs/hardware-guide.md)
-- [DUY Programming Tutorial](docs/duy-programming.md)
-- [MIDI Control Reference](docs/midi-reference.md)
-- [Troubleshooting Guide](docs/troubleshooting.md)
+- [Complete Hardware Guide](docs/hardware-guide.md) - Wiring, soldering, and connections
+- [MIDI Control Reference](docs/midi-reference.md) - All MIDI commands and modes
+- [Simulation Guide](docs/simulation-guide.md) - Online testing with Wokwi and others
+- [DUY Programming Tutorial](docs/duy-programming.md) - Custom firmware development
+- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
 
 ## 🎵 Compatible Software
 
-- **LSDJ** (Little Sound DJ) - All versions
-- **Nanoloop** - Version 1.x
-- **mGB** - Full MIDI support
-- **Custom homebrew** - Use provided examples
+- **[LSDJ](https://www.littlesounddj.com/)** (Little Sound DJ) - All versions, keyboard mode support
+- **[Nanoloop](http://www.nanoloop.com/)** - Version 1.x for Game Boy
+- **[mGB](https://github.com/trash80/mGB)** - Full MIDI sound module support
+- **Custom homebrew** - Use provided examples and templates
+
+### LSDJ Mode Support
+- **Master/Slave Sync**: [Multiboot MIDI Sync](https://littlesounddj.fandom.com/wiki/Multiboot_MIDI_Sync)
+- **Keyboard Mode**: [PC Keyboard Interface](https://littlesounddj.fandom.com/wiki/PC_Keyboard_Interface) compatible
+- **Map Mode**: 4-channel polyphonic control
 
 ## 🤝 Contributing
 
@@ -111,16 +132,32 @@ This project is released under the MIT License. See [LICENSE](LICENSE) for detai
 
 ## 🙏 Credits
 
-- **Original ArduinoBoy**: trash80 (Timothy Lamb)
-- **RK-002 Platform**: Retrokits
+- **Original ArduinoBoy**: [trash80 (Timothy Lamb)](https://github.com/trash80/Arduinoboy)
+- **RK-002 Platform**: [Retrokits](https://retrokits.com/)
+- **Little Sound DJ**: [Johan Kotlinski](https://www.littlesounddj.com/)
+- **mGB**: [trash80](https://github.com/trash80/mGB)
 - **DUYinoboy Port**: Contributors to this project
 
 ## 🔗 Links
 
-- [Original ArduinoBoy](https://github.com/trash80/Arduinoboy)
-- [Retrokits RK-002](https://retrokits.com/shop/rk002/)
-- [DUY Web Editor](https://duy.retrokits.com/)
-- [LSDJ Official Site](https://www.littlesounddj.com/)
+### Hardware & Software
+- [Original ArduinoBoy Repository](https://github.com/trash80/Arduinoboy)
+- [Retrokits RK-002 Smart MIDI Cable](https://retrokits.com/shop/rk002/)
+- [RK-202 Buttonboard Expansion](https://retrokits.com/shop/rk202/)
+- [Little Sound DJ Official Site](https://www.littlesounddj.com/)
+- [Nanoloop Official Site](http://www.nanoloop.com/)
+- [mGB MIDI Game Boy](https://github.com/trash80/mGB)
+
+### Development Tools
+- [DUY Web Editor](https://duy.retrokits.com/) - Official RK-002 programming environment
+- [Wokwi Arduino Simulator](https://wokwi.com/arduino) - Online simulation and testing
+- [Arduino IDE](https://www.arduino.cc/en/software) - Local development environment
+- [RK-002 Arduino Board Package](https://retrokits.com/rk002-duy/) - Installation guide
+
+### Community & Documentation
+- [LSDJ Wiki](https://littlesounddj.fandom.com/wiki/Little_Sound_Dj_Wiki) - Comprehensive LSDJ documentation
+- [LSDJ Operating Manual](https://www.littlesounddj.com/lsd/latest/documentation/LSDj_9_2_6.pdf) - Official documentation
+- [Retrokits Support](https://retrokits.com/category/rk002/) - RK-002 resources and updates
 
 ---
 

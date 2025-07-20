@@ -2,6 +2,12 @@
 
 Complete MIDI implementation for DUYinoboy modes and controls.
 
+**References**:
+- [MIDI Beat Clock Standard](https://en.wikipedia.org/wiki/MIDI_beat_clock) - 24 PPQN specification
+- [MIDI PPQN Technical Guide](https://www.sweetwater.com/insync/ppqn-pulses-per-quarter-note-parts-per-quarter-note/)
+- [LSDJ MIDI Documentation](https://www.littlesounddj.com/lsd/latest/documentation/LSDj_9_2_6.pdf)
+- [ArduinoBoy MIDI Reference](https://github.com/trash80/Arduinoboy)
+
 ## Mode Selection
 
 ### Primary Method: Program Change
@@ -99,10 +105,12 @@ Complete MIDI implementation for DUYinoboy modes and controls.
 
 ## Real-Time Messages
 
-### MIDI Clock
-- **Function**: Slave sync input (24 PPQN)
+### MIDI Clock (F8)
+- **Standard**: [MIDI Beat Clock](https://en.wikipedia.org/wiki/MIDI_beat_clock) - 24 PPQN
+- **Function**: Slave sync input for external synchronization
 - **Active Modes**: LSDJ Slave, Nanoloop Slave
-- **Conversion**: 24 PPQN MIDI → 4 PPQN Game Boy
+- **Conversion**: 24 PPQN MIDI → 4 PPQN Game Boy (6:1 division ratio)
+- **Timing**: 60,000,000 / (24 × BPM) microseconds between clocks
 
 ### Transport Commands
 
@@ -230,7 +238,7 @@ DUYinoboy does not implement custom SysEx commands. All configuration is done vi
 
 | Function | Transmitted | Recognized | Remarks |
 |----------|-------------|------------|---------|
-| Basic Channel | N/A | 1-16 | Via CC16 |
+| Basic Channel | N/A | 1-16 | Configurable via CC16, saved to EEPROM |
 | Mode | N/A | Mode 3 (Omni Off) | |
 | Note Number | N/A | 0-127 | |
 | Velocity | N/A | Note On: 1-127<br>Note Off: 0 | |
@@ -269,9 +277,9 @@ DUYinoboy does not implement custom SysEx commands. All configuration is done vi
 
 ### Basic Setup
 ```
-F0 Program Change 2    ; Select LSDJ Keyboard mode
-B0 10 00              ; Set MIDI channel 1 (CC16 = 0)
-B0 07 7F              ; Set BPM to ~200 (CC7 = 127)
+C0 02                 ; Program Change 2 - Select LSDJ Keyboard mode
+B0 10 00              ; CC16 value 0 - Set MIDI channel 1
+B0 07 7F              ; CC7 value 127 - Set BPM to ~200
 ```
 
 ### Play Note
@@ -282,7 +290,9 @@ B0 07 7F              ; Set BPM to ~200 (CC7 = 127)
 
 ### Start Clock Sync
 ```
-F0 Program Change 1    ; Select LSDJ Slave mode
-FA                    ; MIDI Start
-F8 F8 F8...           ; MIDI Clock (24 PPQN)
+C0 01                 ; Program Change 1 - Select LSDJ Slave mode
+FA                    ; MIDI Start (real-time message)
+F8 F8 F8...           ; MIDI Clock at 24 PPQN (real-time messages)
+FC                    ; MIDI Stop (when needed)
 ```
+**Timing**: At 120 BPM, MIDI clocks occur every 20.83ms (60,000,000 ÷ (24 × 120))

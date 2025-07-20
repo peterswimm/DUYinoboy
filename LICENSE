@@ -25,9 +25,17 @@ SOFTWARE.
 ## Credits and Acknowledgments
 
 This project builds upon the original ArduinoBoy by trash80 (Timothy Lamb).
-Original ArduinoBoy: https://github.com/trash80/Arduinoboy
+Original ArduinoBoy: [https://github.com/trash80/Arduinoboy](https://github.com/trash80/Arduinoboy)
 
 The RK-002 Smart MIDI Cable is developed by Retrokits.
-Retrokits: https://retrokits.com/
+Retrokits: [https://retrokits.com/](https://retrokits.com/)
+
+Little Sound DJ (LSDJ) is developed by Johan Kotlinski.
+LSDJ: [https://www.littlesounddj.com/](https://www.littlesounddj.com/)
 
 Game Boy and related trademarks are property of Nintendo.
+
+### Additional References
+- [Game Boy Hardware Documentation](https://gbdev.io/pandocs/) - Pan Docs community project
+- [Arduino Platform](https://www.arduino.cc/) - Development environment
+- [MIDI Specification](https://midi.org/) - MIDI Manufacturers Association

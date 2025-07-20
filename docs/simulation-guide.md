@@ -4,7 +4,7 @@ Complete guide for testing and simulating DUYinoboy code using online Arduino de
 
 ## 🌐 Online Arduino Simulators
 
-### 1. Wokwi Arduino Simulator (Recommended)
+### 1. [Wokwi Arduino Simulator](https://wokwi.com/arduino) (Recommended)
 **URL**: https://wokwi.com/arduino
 
 **Features**:
@@ -33,7 +33,7 @@ int RK002_readGPIO(int pin) {
 }
 ```
 
-### 2. Tinkercad Circuits
+### 2. [Tinkercad Circuits](https://www.tinkercad.com/circuits)
 **URL**: https://www.tinkercad.com/circuits
 
 **Features**:
@@ -46,7 +46,7 @@ int RK002_readGPIO(int pin) {
 - No native MIDI support
 - Limited to basic GPIO simulation
 
-### 3. SimulIDE
+### 3. [SimulIDE](https://simulide.com/)
 **URL**: https://simulide.com/
 
 **Features**:
@@ -55,7 +55,7 @@ int RK002_readGPIO(int pin) {
 - Logic analyzer
 - Oscilloscope
 
-### 4. Online Arduino IDE
+### 4. [Arduino Web Editor](https://create.arduino.cc/editor)
 **URL**: https://create.arduino.cc/editor
 
 **Features**:
@@ -68,9 +68,10 @@ int RK002_readGPIO(int pin) {
 
 ### Step 1: Create Wokwi Project
 
-1. Visit https://wokwi.com/arduino
+1. Visit [Wokwi Arduino Simulator](https://wokwi.com/arduino)
 2. Create new Arduino Uno project
 3. Replace default code with simulation-compatible DUYinoboy
+4. **Pro Tip**: Sign up for free account to save your projects
 
 ### Step 2: Add Virtual Components
 
@@ -232,6 +233,11 @@ void handleMasterClock() {
 
 ## 📊 Testing Scenarios
 
+**Quick Start Links**:
+- [Example Wokwi Project](https://wokwi.com/projects/new/arduino-uno) - Start here
+- [Arduino Reference](https://www.arduino.cc/reference/en/) - Language documentation
+- [MIDI Tutorial](https://itp.nyu.edu/physcomp/labs/labs-serial-communication/midi/) - Understanding MIDI basics
+
 ### 1. GPIO Timing Test
 Monitor pin 3 (GB_SIN) with oscilloscope to verify:
 - 500μs bit timing
@@ -352,4 +358,18 @@ void simulateGameBoyResponse() {
 }
 ```
 
-This simulation setup allows comprehensive testing of DUYinoboy functionality without requiring actual RK-002 hardware or Game Boy connections.
+## 🔗 Additional Resources
+
+### Online Learning
+- [Arduino Getting Started Guide](https://www.arduino.cc/en/Guide)
+- [MIDI Programming Tutorial](https://itp.nyu.edu/physcomp/labs/labs-serial-communication/midi/)
+- [Game Boy Hardware Documentation](https://gbdev.io/pandocs/)
+- [Wokwi Documentation](https://docs.wokwi.com/)
+
+### Community Support
+- [Arduino Forum](https://forum.arduino.cc/) - General Arduino help
+- [Retrokits Community](https://retrokits.com/) - RK-002 specific support
+- [LSDJ Community](https://littlesounddj.fandom.com/wiki/Little_Sound_Dj_Wiki)
+- [Chip Music Forums](https://chipmusic.org/) - Game Boy music community
+
+This simulation setup allows comprehensive testing of DUYinoboy functionality without requiring actual RK-002 hardware or Game Boy connections. Perfect for learning, prototyping, and debugging before building the physical hardware.

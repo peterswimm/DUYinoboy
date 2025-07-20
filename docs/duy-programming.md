@@ -16,10 +16,11 @@ Complete guide to programming the RK-002 with DUYinoboy firmware.
 ## Method 1: DUY Web Editor (Recommended)
 
 ### Setup
-1. **Visit**: https://duy.retrokits.com/
-2. **Register**: Create account for code editing
+1. **Visit**: [DUY Web Editor](https://duy.retrokits.com/)
+2. **Register**: Create account for code editing and sharing
 3. **Connect RK-002**: MIDI OUT → RK-002 MIDI IN
 4. **Install DUY Base**: Upload DUY firmware first
+5. **Verify Connection**: Check that RK-002 is detected
 
 ### Creating Your DUYinoboy
 ```cpp
@@ -67,14 +68,14 @@ void loop() {
 ## Method 2: Arduino IDE 1.8.x
 
 ### IDE Setup
-1. **Install Arduino IDE 1.8.x** (NOT 2.x - incompatible)
+1. **Install Arduino IDE 1.8.x** ([Download from Arduino.cc](https://www.arduino.cc/en/software) - NOT 2.x - incompatible)
 2. **Add Board Package**:
    - File → Preferences 
    - Additional Boards Manager URLs: 
      `https://www.retrokits.com/rk002/arduino/package_retrokits_index.json`
 3. **Install RK-002 Board**:
    - Tools → Board → Boards Manager
-   - Search "RK002" and install
+   - Search "RK002" and install [Retrokits RK-002 board package](https://retrokits.com/rk002-duy/)
 
 ### Project Setup
 1. **Select Board**: Tools → Board → RK-002
@@ -298,7 +299,19 @@ See the `examples/` directory for:
 
 ## Resources
 
-- **DUY Portal**: https://duy.retrokits.com/
-- **RK-002 Documentation**: https://retrokits.com/support/
-- **Arduino Reference**: https://www.arduino.cc/reference/
-- **Game Boy Dev**: https://gbdev.io/
+### Development Tools
+- **[DUY Web Editor](https://duy.retrokits.com/)** - Official RK-002 programming environment
+- **[Arduino IDE Download](https://www.arduino.cc/en/software)** - Desktop development environment
+- **[RK-002 Board Package](https://retrokits.com/rk002-duy/)** - Arduino IDE support
+- **[Arduino Language Reference](https://www.arduino.cc/reference/)** - Complete function documentation
+
+### Hardware Documentation
+- **[RK-002 Official Documentation](https://retrokits.com/shop/rk002/)** - Hardware specifications
+- **[Game Boy Development](https://gbdev.io/)** - Pan Docs and hardware guides
+- **[Game Boy Link Cable Pinouts](https://gbdev.io/pandocs/External_Connectors.html)** - Connection details
+
+### Community & Support
+- **[Retrokits Support Forum](https://retrokits.com/)** - Official support
+- **[Arduino Community Forum](https://forum.arduino.cc/)** - General Arduino help
+- **[LSDJ Wiki](https://littlesounddj.fandom.com/wiki/Little_Sound_Dj_Wiki)** - LSDJ documentation
+- **[ArduinoBoy Repository](https://github.com/trash80/Arduinoboy)** - Original project reference

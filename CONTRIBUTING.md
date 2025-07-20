@@ -113,11 +113,28 @@ const byte PROGMEM midiToGameBoyNote[] = {
 
 ## Resources
 
-- [Original ArduinoBoy](https://github.com/trash80/Arduinoboy)
-- [RK-002 Documentation](https://retrokits.com/support/)
-- [DUY Web Editor](https://duy.retrokits.com/)
-- [Game Boy Development Community](https://gbdev.io/)
-- [LSDJ Documentation](https://www.littlesounddj.com/lsdj/latest/documentation/)
+### Core References
+- [Original ArduinoBoy Repository](https://github.com/trash80/Arduinoboy) - Foundation project
+- [RK-002 Smart MIDI Cable](https://retrokits.com/shop/rk002/) - Hardware platform
+- [DUY Web Editor](https://duy.retrokits.com/) - Official programming environment
+- [Arduino IDE](https://www.arduino.cc/en/software) - Alternative development environment
+
+### Game Boy Development
+- [Game Boy Development Community](https://gbdev.io/) - Hardware documentation
+- [Pan Docs](https://gbdev.io/pandocs/) - Complete Game Boy hardware reference
+- [Game Boy Link Cable Details](https://gbdev.io/pandocs/External_Connectors.html) - Connection specifications
+
+### Music Software
+- [Little Sound DJ Official](https://www.littlesounddj.com/) - Primary music software
+- [LSDJ Documentation](https://www.littlesounddj.com/lsd/latest/documentation/LSDj_9_2_6.pdf) - Complete manual
+- [LSDJ Wiki](https://littlesounddj.fandom.com/wiki/Little_Sound_Dj_Wiki) - Community documentation
+- [Nanoloop Official](http://www.nanoloop.com/) - Alternative music software
+- [mGB Repository](https://github.com/trash80/mGB) - MIDI Game Boy firmware
+
+### Community Forums
+- [Chip Music Community](https://chipmusic.org/) - Game Boy music forums
+- [Arduino Forum](https://forum.arduino.cc/) - Programming help
+- [Retrokits Support](https://retrokits.com/) - Hardware support
 
 ## Recognition
 

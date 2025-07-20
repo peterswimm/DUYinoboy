@@ -18,16 +18,17 @@ Common issues and solutions for DUYinoboy setup and operation.
 2. **Power Issues**  
    - **Check**: Is RK-002 getting power from MIDI OUT port?
    - **Test**: LED should be visible when connected
-   - **Fix**: Use powered MIDI interface or MIDI thru box
+   - **Fix**: Use [powered MIDI interface](https://retrokits.com/shop/rk005/) or MIDI thru box
+   - **Reference**: [RK-002 Power Requirements](https://retrokits.com/shop/rk002/)
 
 3. **Wrong Arduino IDE Version**
-   - **Check**: Must use Arduino IDE 1.8.x (NOT 2.x)
-   - **Fix**: Download 1.8.19 from Arduino.cc archives
+   - **Check**: Must use [Arduino IDE 1.8.x](https://www.arduino.cc/en/software) (NOT 2.x)
+   - **Fix**: Download 1.8.19 from [Arduino.cc archives](https://www.arduino.cc/en/software)
    - **Note**: RK-002 board package incompatible with IDE 2.x
 
 4. **Incorrect Board Selection**
    - **Check**: Tools → Board → RK-002 selected?
-   - **Fix**: Install RK-002 board package first
+   - **Fix**: Install [RK-002 board package](https://retrokits.com/rk002-duy/) first
    - **URL**: `https://www.retrokits.com/rk002/arduino/package_retrokits_index.json`
 
 ### Game Boy Not Responding
@@ -208,6 +209,7 @@ Common issues and solutions for DUYinoboy setup and operation.
 - **Sync**: Set to MIDI (not OFF)
 - **MIDI**: Enable in project settings  
 - **Channel**: Match your MIDI channel
+- **Reference**: [LSDJ MIDI Sync Guide](https://littlesounddj.fandom.com/wiki/Multiboot_MIDI_Sync)
 
 **Steps**:
 1. Load LSDJ
@@ -283,9 +285,11 @@ Common issues and solutions for DUYinoboy setup and operation.
 ## Getting Help
 
 ### Community Resources
-- **GitHub Issues**: Report bugs and ask questions
-- **Retrokits Forum**: https://bla.retrokits.com/flarum/
-- **Game Boy Music Community**: Various Discord servers and forums
+- **[GitHub Issues](https://github.com/DUYinoboy/DUYinoboy/issues)**: Report bugs and ask questions
+- **[Retrokits Support](https://retrokits.com/)**: Official hardware support
+- **[LSDJ Community](https://littlesounddj.fandom.com/wiki/Little_Sound_Dj_Wiki)**: Software-specific help
+- **[Chip Music Forums](https://chipmusic.org/)**: Game Boy music community
+- **[Arduino Forum](https://forum.arduino.cc/)**: General Arduino programming help
 
 ### Information to Include
 When asking for help, provide:
