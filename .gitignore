@@ -1,0 +1,61 @@
+# .gitignore for DUYinoboy
+
+# Arduino IDE files
+*.hex
+*.elf
+*.map
+
+# Compilation artifacts
+build/
+*.o
+*.a
+
+# Arduino IDE backup files
+*~
+*.bak
+*.orig
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Temporary files
+*.tmp
+*.temp
+
+# Log files
+*.log
+
+# Documentation build files
+docs/_build/
+docs/.doctrees/
+
+# Python (if any build scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Node.js (if any web tools)
+node_modules/
+npm-debug.log*
+
+# Hardware design files (temporary)
+*.gbr~
+*.kicad_pcb-bak
+*.sch-bak
+
+# Personal notes
+NOTES.md
+TODO.md
+personal/
